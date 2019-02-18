@@ -58,7 +58,7 @@
 - B-Location: 里程
 - B-Type: 类型
 
-![value](./static.img/msg.png)
+![value](./static/img/msg.png)
 
 1. 第一步，我们现验证了里程数的验证
 2. 第二步，进行名称的验证
