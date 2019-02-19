@@ -39,9 +39,9 @@ B_Type = ponderSet[4]
 
 # 定义其他要用到的变量
 S_Location = signalSet[3]   # 信号机里程
-Sta_DQu = staSet[2]          # 大区号
-Sta_FQu = staSet[3]         # 分区号
-Sta_CZ = staSet[4]          # 车站好
+Sta_DQu = str(int(staSet[2]))          # 大区号 float 3.0 int -> 3
+Sta_FQu = str(int(staSet[3]))         # 分区号
+Sta_CZ = str(int(staSet[4]))          # 车站号
 
 # 定义正确的值
 # B_trueLocation = ''
@@ -102,7 +102,41 @@ def nameIsTrue():
     else:
         print('应答器类型错误!')
 
+    B_trueName = 'B'+str(trueDistance)+'-1'
+    print(B_trueName)
+    return B_trueName
+
+def numIsTrue():
+    value = B_Num.split('-')    # 存放切割后的数组
+    num_DQu = value[0]  # 编号的大区号
+    num_FQu = value[1]  # 编号的分区号
+    num_CZ = value[2]    # 编号的车站号
+    num_cellNum = value[3]  # 单元编号
+    num_Num =  value[4]     # 应答器组内编号
+
+    # 未来的思路
+    # 现在我们的判断，对于单元编号和组内编号使一个写死的值
+    # 在将来，会结合数组来实现
+    if(num_DQu == Sta_DQu and num_FQu == Sta_FQu and num_CZ == Sta_CZ and
+        num_cellNum == '001' and num_Num == '1'):
+        print('应答器编号正确!')
+    else:
+        if (num_DQu != Sta_DQu):
+            print('大区编号错误!')
+        if (num_FQu != Sta_FQu):
+            print('分区编号错误!')
+        if (num_CZ != Sta_CZ):
+            print('车站号错误!')
+        if (num_cellNum != '001'):
+            print('单元号错误!')
+        if (num_Num != '1'):
+            print('组内编号错误!')
+    B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-001'+'-1'
+    print(B_trueNum)
+    return B_trueNum
+
 print(ponderSet)
 print(staSet)
 # judgeLocation()
 nameIsTrue()
+numIsTrue()
