@@ -31,11 +31,18 @@ for r in range(signal_ws.nrows):
             signalSet.append(signal_ws.cell(r,s).value)
 from pprint import pprint
 
+# 定义类
+class Verification(object):
+    pass
+
+# 创建应答器实例
+ponder = Verification()
+
 # 定义四个属性
-B_Name = ponderSet[1]
-B_Num = ponderSet[2]
-B_Location = ponderSet[3]
-B_Type = ponderSet[4]
+ponder.B_Name = ponderSet[1]
+ponder.B_Num = ponderSet[2]
+ponder.B_Location = ponderSet[3]
+ponder.B_Type = ponderSet[4]
 
 # 定义其他要用到的变量
 S_Location = signalSet[3]   # 信号机里程
@@ -55,59 +62,61 @@ def getLocation(location):
 # 判断里程是否正确
 def judgeLocation():
     sg_location=getLocation(S_Location)
-    ponder_location=getLocation(B_Location)
+    ponder_location=getLocation(ponder.B_Location)
     true_location=sg_location+30
     if true_location>ponder_location:
         if true_location<100 :
             true_location='0'+str(true_location)
-        B_trueLocation = B_Location.split('+')[0]+'+'+str(true_location)
+        ponder.B_trueLocation = ponder.B_Location.split('+')[0]+'+'+str(true_location)
         print('里程错误！正确的里程为:')
-        print(B_trueLocation)
-        return B_trueLocation
+        print(ponder.B_trueLocation)
+        return False
         # print(B_Location)
     else:
         print('里程正确!')
-        return B_Location
+        ponder.B_trueLocation = ponder.B_Location
+        return True
 
 def nameIsTrue():
-    B_trueLocation = judgeLocation()
-    initials = B_Name[0]
+    # B_trueLocation = judgeLocation()
+    initials = ponder.B_Name[0]
     # 判断首字母是否为 'B'
     if (initials == 'B'):
         print('首字母正确')
-        print(B_trueLocation)
+        print(ponder.B_trueLocation)
     else:
         print('首字母错误')
-    shuzi = B_trueLocation.split('K')[1]
+    shuzi = ponder.B_trueLocation.split('K')[1]
     _distance = shuzi.replace('+', '')   # 将 '+' 消除
     distance = int(_distance[0:4])      # 取前四位
     if (distance % 2 == 0):
         trueDistance = distance + 1     # 得到正确的公里标
     else:
         trueDistance = distance
-    Km_mark = int(B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
+    Km_mark = int(ponder.B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
     if(trueDistance == Km_mark):
         print('公里标正确！')
     else:
         print('公里标错误！')
         print('正确的公里标为:' + str(trueDistance))
     # 284018 + 30 得到的是有源应答器的里程
-    num = B_Name.split('-')[1]
+    num = ponder.B_Name.split('-')[1]
     if(num == '1'):
         print('组内编号正确!')
     else:
         print('组内编号错误!')
-    if(B_Type == '有源'):
+    if(ponder.B_Type == '有源'):
         print('应答器类型正确！')
     else:
         print('应答器类型错误!')
+        return False
 
-    B_trueName = 'B'+str(trueDistance)+'-1'
-    print(B_trueName)
-    return B_trueName
+    ponder.B_trueName = 'B'+str(trueDistance)+'-1'
+    print(ponder.B_trueName)
+    return True
 
 def numIsTrue():
-    value = B_Num.split('-')    # 存放切割后的数组
+    value = ponder.B_Num.split('-')    # 存放切割后的数组
     num_DQu = value[0]  # 编号的大区号
     num_FQu = value[1]  # 编号的分区号
     num_CZ = value[2]    # 编号的车站号
@@ -119,7 +128,9 @@ def numIsTrue():
     # 在将来，会结合数组来实现
     if(num_DQu == Sta_DQu and num_FQu == Sta_FQu and num_CZ == Sta_CZ and
         num_cellNum == '001' and num_Num == '1'):
+        ponder.B_trueNum = ponder.B_Num
         print('应答器编号正确!')
+        return True
     else:
         if (num_DQu != Sta_DQu):
             print('大区编号错误!')
@@ -131,12 +142,11 @@ def numIsTrue():
             print('单元号错误!')
         if (num_Num != '1'):
             print('组内编号错误!')
-    B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-001'+'-1'
-    print(B_trueNum)
-    return B_trueNum
+        ponder.B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-001'+'-1'
+        print(ponder.B_trueNum)
+        return False
 
-print(ponderSet)
-print(staSet)
-# judgeLocation()
+print(ponder)
+judgeLocation()
 nameIsTrue()
 numIsTrue()
