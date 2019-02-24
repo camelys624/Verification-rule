@@ -31,18 +31,28 @@ for r in range(signal_ws.nrows):
             signalSet.append(signal_ws.cell(r,s).value)
 from pprint import pprint
 
-# 定义类
-class Verification(object):
+# 定义应答器父类
+class Transponder(object):
+    def __init__(self, name, num, location, type):
+        self.B_Name = name
+        self.B_Num = num
+        self.B_Location = location
+        self.B_Type = type
+    pass
+
+# 有源应答器类继承于应答器类
+# 重写了里程验证和类型验证
+class Active_Transponder(Transponder):
     pass
 
 # 创建应答器实例
-ponder = Verification()
+ponder = Active_Transponder(ponderSet[1],ponderSet[2],ponderSet[3],ponderSet[4])
 
 # 定义四个属性
-ponder.B_Name = ponderSet[1]
-ponder.B_Num = ponderSet[2]
-ponder.B_Location = ponderSet[3]
-ponder.B_Type = ponderSet[4]
+# ponder.B_Name = ponderSet[10]
+# ponder.B_Num = ponderSet[2]
+# ponder.B_Location = ponderSet[3]
+# ponder.B_Type = ponderSet[4]
 
 # 定义其他要用到的变量
 S_Location = signalSet[3]   # 信号机里程
