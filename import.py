@@ -1,13 +1,14 @@
 import xlrd
 import xlwt
+from xlutils.copy import copy
 # path
 transponder='./data/transponder.xls'    # 应答器
 station='./data/station.xls'    # 车站位置信息
 signal='./data/signalData.xls'  # 信号机信息
 
-ponder_wb=xlrd.open_workbook(filename=transponder)
-station_wb=xlrd.open_workbook(filename=station)
-signal_wb=xlrd.open_workbook(filename=signal)
+ponder_wb=xlrd.open_workbook(filename=transponder, formatting_info=True)
+station_wb=xlrd.open_workbook(filename=station, formatting_info=True)
+signal_wb=xlrd.open_workbook(filename=signal, formatting_info=True)
 ponder_ws=ponder_wb.sheet_by_name('下行')
 station_ws=station_wb.sheet_by_name('Sheet1')
 signal_ws=signal_wb.sheet_by_name('下行正向')
@@ -16,10 +17,14 @@ signal_ws=signal_wb.sheet_by_name('下行正向')
 ponderSet=[]    # 应答器信息
 staSet=[]       # 车站位置信息
 signalSet=[]    # 信号机信息
+headerSet1 = []
+headerSet2 = []
 
 # range传要循环的数组
 for c in range(ponder_ws.ncols):
     # append是数组的一个方法
+    headerSet1.append(ponder_ws.cell(0,c).value)
+    headerSet2.append(ponder_ws.cell(1,c).value)
     ponderSet.append(ponder_ws.cell(2,c).value)
 
 for s in range(station_ws.ncols):
@@ -39,13 +44,16 @@ Sta_CZ = str(int(staSet[4]))          # 车站号
 
 # 定义应答器父类
 class Transponder(object):
+    # 初始化四个属性
     def __init__(self, name, num, location, type):
         self.B_Name = name
         self.B_Num = num
         self.B_Location = location
         self.B_Type = type
-    def nameIsTrue(self, B_trueLocation):
+
+    def verifyName(self, B_trueLocation):
         # B_trueLocation = judgeLocation()
+        flag = True
         initials = self.B_Name[0]
         # 判断首字母是否为 'B'
         if (initials == 'B'):
@@ -53,6 +61,7 @@ class Transponder(object):
             print(B_trueLocation)
         else:
             print('首字母错误')
+            flag = False
         shuzi = B_trueLocation.split('K')[1]
         _distance = shuzi.replace('+', '')   # 将 '+' 消除
         distance = int(_distance[0:4])      # 取前四位
@@ -65,6 +74,7 @@ class Transponder(object):
             print('公里标正确！')
         else:
             print('公里标错误！')
+            flag = False
             print('正确的公里标为:' + str(trueDistance))
         # 284018 + 30 得到的是有源应答器的里程
         num = self.B_Name.split('-')[1]
@@ -72,17 +82,13 @@ class Transponder(object):
             print('组内编号正确!')
         else:
             print('组内编号错误!')
-        if(self.B_Type == '有源'):
-            print('应答器类型正确！')
-        else:
-            print('应答器类型错误!')
-            return False
-
+            flag = False
         self.B_trueName = 'B'+str(trueDistance)+'-1'
         print(self.B_trueName)
-        return True
+        print(flag)
+        return flag
 
-    def numIsTrue(self):
+    def verifyNum(self):
         value = self.B_Num.split('-')    # 存放切割后的数组
         num_DQu = value[0]  # 编号的大区号
         num_FQu = value[1]  # 编号的分区号
@@ -118,7 +124,7 @@ class Transponder(object):
 # 重写了里程验证和类型验证
 class Active_Transponder(Transponder):
     # 判断里程是否正确
-    def judgeLocation(self):
+    def verifyLocation(self):
         sg_location=getLocation(S_Location)
         ponder_location=getLocation(self.B_Location)
         true_location=sg_location+30
@@ -134,6 +140,13 @@ class Active_Transponder(Transponder):
             print('里程正确!')
             self.B_trueLocation = self.B_Location
             return True
+    def verifyType(self):
+        if(self.B_Type == '有源'):
+            print('应答器类型正确！')
+            return True
+        else:
+            print('应答器类型错误!')
+            return False
     pass
 
 # 创建应答器实例
@@ -154,7 +167,11 @@ def getLocation(location):
     sg_location=int(sg_location)
     return sg_location
 
-print(ponder)
-ponder.judgeLocation()
-ponder.nameIsTrue(ponder.B_trueLocation)
-ponder.numIsTrue()
+workbook = copy(ponder_wb)
+worshell = workbook.get_sheet(0)
+print(worshell)
+
+ponder.verifyLocation()
+ponder.verifyName(ponder.B_trueLocation)
+ponder.verifyType()
+ponder.verifyNum()
