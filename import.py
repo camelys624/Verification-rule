@@ -169,9 +169,15 @@ def getLocation(location):
 
 workbook = copy(ponder_wb)
 worshell = workbook.get_sheet(0)
-print(worshell)
+style = xlwt.easyxf('font:name 宋体, color-index red')
 
-ponder.verifyLocation()
-ponder.verifyName(ponder.B_trueLocation)
-ponder.verifyType()
-ponder.verifyNum()
+if(not ponder.verifyLocation()):
+    worshell.write(2, 3, ponder.B_Location, style)
+if(not ponder.verifyName(ponder.B_trueLocation)):
+    worshell.write(2, 1, ponder.B_Name, style)
+if(not ponder.verifyNum()):
+    worshell.write(2, 2, ponder.B_Num, style)
+if(not ponder.verifyType()):
+    worshell.write(2, 4, ponder.B_Type, style)
+
+workbook.save('test.xls')
