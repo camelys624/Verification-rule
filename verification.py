@@ -1,15 +1,16 @@
 import xlrd
 import xlwt
 from xlutils.copy import copy
-# path
+# path 路径
 transponder='./data/transponder.xls'    # 应答器
 station='./data/station.xls'    # 车站位置信息
 signal='./data/signalData.xls'  # 信号机信息
 
-ponder_wb=xlrd.open_workbook(filename=transponder, formatting_info=True)
+# 打开 excel 表
+ponder_wb=xlrd.open_workbook(filename=transponder, formatting_info=True)    # formatting_info=True表示保持格式不变
 station_wb=xlrd.open_workbook(filename=station, formatting_info=True)
 signal_wb=xlrd.open_workbook(filename=signal, formatting_info=True)
-ponder_ws=ponder_wb.sheet_by_name('下行')
+ponder_ws=ponder_wb.sheet_by_name('下行')   # 表中的数据
 station_ws=station_wb.sheet_by_name('Sheet1')
 signal_ws=signal_wb.sheet_by_name('下行正向')
 
@@ -17,22 +18,18 @@ signal_ws=signal_wb.sheet_by_name('下行正向')
 ponderSet=[]    # 应答器信息
 staSet=[]       # 车站位置信息
 signalSet=[]    # 信号机信息
-headerSet1 = []
-headerSet2 = []
 
 # range传要循环的数组
 for c in range(ponder_ws.ncols):
     # append是数组的一个方法
-    headerSet1.append(ponder_ws.cell(0,c).value)
-    headerSet2.append(ponder_ws.cell(1,c).value)
     ponderSet.append(ponder_ws.cell(2,c).value)
 
 for s in range(station_ws.ncols):
     staSet.append(station_ws.cell(2,s).value)
 
-for r in range(signal_ws.nrows):
+for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
     if(signal_ws.cell(r,2).value=='SHF'):
-        for s in range(signal_ws.ncols):
+        for s in range(signal_ws.ncols): # 循环这个一行
             signalSet.append(signal_ws.cell(r,s).value)
 from pprint import pprint
 
@@ -45,7 +42,7 @@ Sta_CZ = str(int(staSet[4]))          # 车站号
 # 定义应答器父类
 class Transponder(object):
     # 初始化四个属性
-    def __init__(self, name, num, location, type):
+    def __init__(self, name, num, location, type):  # self 代表自身
         self.B_Name = name
         self.B_Num = num
         self.B_Location = location
@@ -53,12 +50,11 @@ class Transponder(object):
 
     def verifyName(self, B_trueLocation):
         # B_trueLocation = judgeLocation()
-        flag = True
+        flag = True # 标志，私有变量,后面有用
         initials = self.B_Name[0]
         # 判断首字母是否为 'B'
         if (initials == 'B'):
             print('首字母正确')
-            print(B_trueLocation)
         else:
             print('首字母错误')
             flag = False
@@ -84,8 +80,10 @@ class Transponder(object):
             print('组内编号错误!')
             flag = False
         self.B_trueName = 'B'+str(trueDistance)+'-1'
-        print(self.B_trueName)
-        print(flag)
+        if(flag):
+            print('名称正确')
+        else:
+            print('名称错误')
         return flag
 
     def verifyNum(self):
@@ -116,7 +114,6 @@ class Transponder(object):
             if (num_Num != '1'):
                 print('组内编号错误!')
             self.B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-001'+'-1'
-            print(self.B_trueNum)
             return False
         pass
 
@@ -143,23 +140,16 @@ class Active_Transponder(Transponder):
     def verifyType(self):
         if(self.B_Type == '有源'):
             print('应答器类型正确！')
+            self.B_trueType = self.B_Type
             return True
         else:
             print('应答器类型错误!')
+            self.B_trueType = '有源'
             return False
     pass
 
-# 创建应答器实例
+# 创建有源应答器实例
 ponder = Active_Transponder(ponderSet[1],ponderSet[2],ponderSet[3],ponderSet[4])
-
-# 定义四个属性
-# ponder.B_Name = ponderSet[10]
-# ponder.B_Num = ponderSet[2]
-# ponder.B_Location = ponderSet[3]
-# ponder.B_Type = ponderSet[4]
-
-# 定义正确的值
-# B_trueLocation = ''
 
 # 获取+号后面里程信息，并返回
 def getLocation(location):
@@ -167,17 +157,25 @@ def getLocation(location):
     sg_location=int(sg_location)
     return sg_location
 
+# 这里用到了我们之前导入的 copy
 workbook = copy(ponder_wb)
-worshell = workbook.get_sheet(0)
+worksheet = workbook.get_sheet(0)
+# 设置样式
 style = xlwt.easyxf('font:name 宋体, color-index red')
 
+# 根据返回值判断是否需要标红
 if(not ponder.verifyLocation()):
-    worshell.write(2, 3, ponder.B_Location, style)
+    worksheet.write(2, 3, ponder.B_Location, style)
+    worksheet.write(2, 3+7, ponder.B_trueLocation, style)
 if(not ponder.verifyName(ponder.B_trueLocation)):
-    worshell.write(2, 1, ponder.B_Name, style)
+    worksheet.write(2, 1, ponder.B_Name, style)
+    worksheet.write(2, 1+7, ponder.B_trueName, style)
 if(not ponder.verifyNum()):
-    worshell.write(2, 2, ponder.B_Num, style)
+    worksheet.write(2, 2, ponder.B_Num, style)
+    worksheet.write(2, 2+7, ponder.B_trueNum, style)
+    worksheet
 if(not ponder.verifyType()):
-    worshell.write(2, 4, ponder.B_Type, style)
+    worksheet.write(2, 4, ponder.B_Type, style)
+    worksheet.write(2, 4+7, ponder.B_trueType, style)
 
-workbook.save('test.xls')
+workbook.save('verified.xls')

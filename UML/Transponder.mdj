@@ -307,47 +307,13 @@
 											"height": 13,
 											"text": "+verifyNum(): void",
 											"horizontalAlignment": 0
-										},
-										{
-											"_type": "UMLOperationView",
-											"_id": "AAAAAAFpGUu8nWCpgN4=",
-											"_parent": {
-												"$ref": "AAAAAAFpGTkcOV9dVeo="
-											},
-											"model": {
-												"$ref": "AAAAAAFpGUu8aGCmtfw="
-											},
-											"font": "Arial;13;0",
-											"left": 557,
-											"top": 404,
-											"width": 150.6689453125,
-											"height": 13,
-											"text": "+verifyLocation(): void",
-											"horizontalAlignment": 0
-										},
-										{
-											"_type": "UMLOperationView",
-											"_id": "AAAAAAFpGUwdgmCwrLQ=",
-											"_parent": {
-												"$ref": "AAAAAAFpGTkcOV9dVeo="
-											},
-											"model": {
-												"$ref": "AAAAAAFpGUwdUmCtjqw="
-											},
-											"font": "Arial;13;0",
-											"left": 557,
-											"top": 419,
-											"width": 150.6689453125,
-											"height": 13,
-											"text": "+verifyType(): void",
-											"horizontalAlignment": 0
 										}
 									],
 									"font": "Arial;13;0",
 									"left": 552,
 									"top": 369,
 									"width": 160.6689453125,
-									"height": 68
+									"height": 38
 								},
 								{
 									"_type": "UMLReceptionCompartmentView",
@@ -387,7 +353,7 @@
 							"left": 552,
 							"top": 216,
 							"width": 160.6689453125,
-							"height": 221,
+							"height": 191,
 							"nameCompartment": {
 								"$ref": "AAAAAAFpGTkcOV9X2xk="
 							},
@@ -431,7 +397,7 @@
 								"$ref": "AAAAAAFpGTkcOF9WUAQ="
 							},
 							"lineStyle": 1,
-							"points": "713:314;741:310"
+							"points": "713:304;741:302"
 						},
 						{
 							"_type": "UMLClassView",
@@ -666,8 +632,8 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
-									"left": 543,
-									"top": 448,
+									"left": 549,
+									"top": 434,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 15,
@@ -687,8 +653,8 @@
 									},
 									"visible": null,
 									"font": "Arial;13;0",
-									"left": 530,
-									"top": 441,
+									"left": 536,
+									"top": 427,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 30,
@@ -708,8 +674,8 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
-									"left": 570,
-									"top": 463,
+									"left": 576,
+									"top": 447,
 									"height": 13,
 									"alpha": -1.5707963267948966,
 									"distance": 15,
@@ -727,7 +693,7 @@
 								"$ref": "AAAAAAFpGUyne2C3r74="
 							},
 							"lineStyle": 1,
-							"points": "544:487;571:437",
+							"points": "543:487;583:407",
 							"showVisibility": true,
 							"nameLabel": {
 								"$ref": "AAAAAAFpGUyn7GDh2Pk="
@@ -748,7 +714,7 @@
 							"font": "Arial;13;0",
 							"left": 240,
 							"top": 488,
-							"width": 202,
+							"width": 202.00021362304688,
 							"height": 50,
 							"text": "有源应答器类，重写了里程验证\n和类型验证方法"
 						},
@@ -1001,8 +967,8 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
-									"left": 717,
-									"top": 464,
+									"left": 710,
+									"top": 449,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 15,
@@ -1022,8 +988,8 @@
 									},
 									"visible": null,
 									"font": "Arial;13;0",
-									"left": 705,
-									"top": 473,
+									"left": 698,
+									"top": 457,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 30,
@@ -1043,8 +1009,8 @@
 									},
 									"visible": false,
 									"font": "Arial;13;0",
-									"left": 742,
-									"top": 447,
+									"left": 735,
+									"top": 432,
 									"height": 13,
 									"alpha": -1.5707963267948966,
 									"distance": 15,
@@ -1062,7 +1028,7 @@
 								"$ref": "AAAAAAFpGVb3lWEP0Rg="
 							},
 							"lineStyle": 1,
-							"points": "748:487;712:437",
+							"points": "750:487;696:407",
 							"showVisibility": true,
 							"nameLabel": {
 								"$ref": "AAAAAAFpGVb4CmE5iEA="
@@ -1083,7 +1049,7 @@
 							"font": "Arial;13;0",
 							"left": 896,
 							"top": 488,
-							"width": 176,
+							"width": 176.00018310546875,
 							"height": 50,
 							"text": "无源应答器类，同样重写了\n里程验证和类型验证方法"
 						},
@@ -1252,44 +1218,6 @@
 									"_id": "AAAAAAFpGV1x5GGOvAg=",
 									"_parent": {
 										"$ref": "AAAAAAFpGUFjwF+zd4Y="
-									},
-									"type": "void",
-									"direction": "return"
-								}
-							]
-						},
-						{
-							"_type": "UMLOperation",
-							"_id": "AAAAAAFpGUu8aGCmtfw=",
-							"_parent": {
-								"$ref": "AAAAAAFpGTkcN19UaG0="
-							},
-							"name": "verifyLocation",
-							"parameters": [
-								{
-									"_type": "UMLParameter",
-									"_id": "AAAAAAFpGV2LLmGRBlk=",
-									"_parent": {
-										"$ref": "AAAAAAFpGUu8aGCmtfw="
-									},
-									"type": "void",
-									"direction": "return"
-								}
-							]
-						},
-						{
-							"_type": "UMLOperation",
-							"_id": "AAAAAAFpGUwdUmCtjqw=",
-							"_parent": {
-								"$ref": "AAAAAAFpGTkcN19UaG0="
-							},
-							"name": "verifyType",
-							"parameters": [
-								{
-									"_type": "UMLParameter",
-									"_id": "AAAAAAFpGV2ct2GUWGs=",
-									"_parent": {
-										"$ref": "AAAAAAFpGUwdUmCtjqw="
 									},
 									"type": "void",
 									"direction": "return"
