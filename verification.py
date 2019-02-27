@@ -173,7 +173,6 @@ if(not ponder.verifyName(ponder.B_trueLocation)):
 if(not ponder.verifyNum()):
     worksheet.write(2, 2, ponder.B_Num, style)
     worksheet.write(2, 2+7, ponder.B_trueNum, style)
-    worksheet
 if(not ponder.verifyType()):
     worksheet.write(2, 4, ponder.B_Type, style)
     worksheet.write(2, 4+7, ponder.B_trueType, style)
