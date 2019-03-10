@@ -35,10 +35,21 @@ for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
     signType = signal_ws.cell(r,4).value # signType 就是信号机类型
     if(signType =='出站口' or signType == '通过信号机' or signType == '进站信号机'):
         for s in range(signal_ws.ncols): # 循环这个一行
-            signalSet.append(signal_ws.cell(r,s).value)
+            signal.append(signal_ws.cell(r,s).value)
+        signalSet.append(signal)
 
 # 定义其他要用到的变量
-S_Location = signalSet[0][3]   # 信号机里程
+CZ_C01 = ponderSet[2:5]
+CZ_C02 = ponderSet[5:8]
+YG = ponderSet[8:10]
+ZX = ponderSet[10:12]
+FYG = ponderSet[12:14]
+DW = ponderSet[14:15]
+JX = ponderSet[15:18]
+print(signalSet)
+S_Out = signalSet[0][3]   # 信号机位置
+S_Through = signalSet[1][3]  # 通过信号机位置
+S_In = signalSet[2][3]      # 进站信号机位置
 Sta_DQu = str(int(staSet[2]))          # 大区号 float 3.0 int -> 3
 Sta_FQu = str(int(staSet[3]))         # 分区号
 Sta_CZ = str(int(staSet[4]))          # 车站号
@@ -52,24 +63,6 @@ class Transponder(object):
         self.B_Num = num
         self.B_Location = location
         self.B_Type = type
-
-    # 判断里程是否正确
-    def verifyLocation(self, reference, spacing):
-        sg_location=getLocation(reference)
-        ponder_location=getLocation(self.B_Location)
-        true_location=sg_location+spacing
-        if true_location>ponder_location:
-            if true_location<100 :
-                true_location='0'+str(true_location)
-            self.B_trueLocation = self.B_Location.split('+')[0]+'+'+str(true_location)
-            print('里程错误！正确的里程为:')
-            print(self.B_trueLocation)
-            return False
-            # print(B_Location)
-        else:
-            print('里程正确!')
-            self.B_trueLocation = self.B_Location
-            return True
 
     def verifyName(self, B_trueLocation):
         # B_trueLocation = judgeLocation()
@@ -160,38 +153,60 @@ def getLocation(location):
     sg_location=int(sg_location)
     return sg_location
 
+# 判断里程是否正确
+def verifyLocation(reference, spacing, B_Location, index, *args):
+    sg_location=getLocation(reference)
+    ponder_location=getLocation(B_Location)
+    true_location=sg_location+spacing
+    if (true_location>ponder_location):
+        if true_location<100 :
+            true_location='0'+str(true_location)
+        B_trueLocation = B_Location.split('+')[0]+'+'+str(true_location)
+        print('里程错误！正确的里程为:'+B_trueLocation)
+        # print(B_Location)
+    else:
+        if(args[0]=='ZX'):
+            if(sg_location+450 < ponder_location):
+                print('里程错误！正确的里程为：' + str(sg_location+450))
+        elif(args[0]=='DW'):
+            if(sg_location-250 < ponder_location ):
+                print('里程错误！正确的里程为：' + str(sg_location-250))
+        else:
+            print('里程正确!')
+        B_trueLocation = B_Location
+    return B_trueLocation
+
+
 # 这里用到了我们之前导入的 copy
 workbook = copy(ponder_wb)
 worksheet = workbook.get_sheet(0)
 # 设置样式
 style = xlwt.easyxf('font:name 宋体, color-index red')
 
-def verify(reference,spacing):
-    # 根据返回值判断是否需要标红
-    if(not ponder.verifyLocation(reference,spacing)):
-        worksheet.write(2, 3, ponder.B_Location, style)
-        worksheet.write(2, 3+7, ponder.B_trueLocation, style)
-    if(not ponder.verifyName(ponder.B_trueLocation)):
-        worksheet.write(2, 1, ponder.B_Name, style)
-        worksheet.write(2, 1+7, ponder.B_trueName, style)
-    if(not ponder.verifyNum()):
-        worksheet.write(2, 2, ponder.B_Num, style)
-        worksheet.write(2, 2+7, ponder.B_trueNum, style)
-    if(not ponder.verifyType()):
-        worksheet.write(2, 4, ponder.B_Type, style)
-        worksheet.write(2, 4+7, ponder.B_trueType, style)
+# def verify(reference,spacing):
+#     # 根据返回值判断是否需要标红
+#     if(not ponder.verifyLocation(reference,spacing)):
+#         worksheet.write(2, 3, ponder.B_Location, style)
+#         worksheet.write(2, 3+7, ponder.B_trueLocation, style)
+#     if(not ponder.verifyName(ponder.B_trueLocation)):
+#         worksheet.write(2, 1, ponder.B_Name, style)
+#         worksheet.write(2, 1+7, ponder.B_trueName, style)
+#     if(not ponder.verifyNum()):
+#         worksheet.write(2, 2, ponder.B_Num, style)
+#         worksheet.write(2, 2+7, ponder.B_trueNum, style)
+#     if(not ponder.verifyType()):
+#         worksheet.write(2, 4, ponder.B_Type, style)
+#         worksheet.write(2, 4+7, ponder.B_trueType, style)
 
 
-for y in range(2, len(ponderSet)-3):
-    if(y == 2):
-        # 创建有源应答器实例
-        ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
-        verify(S_Location,30)
-        R_Reference = ponder.B_trueLocation
-    if(y == 5):
-        ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
-        verify(R_Reference, 200)
-    
-
+# for y in range(2, len(ponderSet)-3):
+#     if(y == 2):
+#         # 创建有源应答器实例
+#         ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
+#         verify(S_Out,30)
+#         R_Reference = ponder.B_trueLocation
+#     if(y == 5):
+#         ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
+#         verify(R_Reference, 200)
 
 workbook.save('verified.xls')
