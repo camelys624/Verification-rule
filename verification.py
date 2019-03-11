@@ -46,7 +46,6 @@ ZX = ponderSet[10:12]
 FYG = ponderSet[12:14]
 DW = ponderSet[14:15]
 JX = ponderSet[15:18]
-print(signalSet)
 S_Out = signalSet[0][3]   # 信号机位置
 S_Through = signalSet[1][3]  # 通过信号机位置
 S_In = signalSet[2][3]      # 进站信号机位置
@@ -54,98 +53,7 @@ Sta_DQu = str(int(staSet[2]))          # 大区号 float 3.0 int -> 3
 Sta_FQu = str(int(staSet[3]))         # 分区号
 Sta_CZ = str(int(staSet[4]))          # 车站号
 R_Reference = ''                   # 定义参照点
-
-# 定义应答器父类
-class Transponder(object):
-    # 初始化四个属性
-    def __init__(self, name, num, location, type):  # self 代表自身
-        self.B_Name = name
-        self.B_Num = num
-        self.B_Location = location
-        self.B_Type = type
-
-    def verifyName(self, B_trueLocation):
-        # B_trueLocation = judgeLocation()
-        flag = True # 标志，私有变量,后面有用
-        initials = self.B_Name[0]
-        # 判断首字母是否为 'B'
-        if (initials == 'B'):
-            print('首字母正确')
-        else:
-            print('首字母错误')
-            flag = False
-        shuzi = B_trueLocation.split('K')[1]
-        _distance = shuzi.replace('+', '')   # 将 '+' 消除
-        distance = int(_distance[0:4])      # 取前四位
-        if (distance % 2 == 0):
-            trueDistance = distance + 1     # 得到正确的公里标
-        else:
-            trueDistance = distance
-        Km_mark = int(self.B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
-        if(trueDistance == Km_mark):
-            print('公里标正确！')
-        else:
-            print('公里标错误！')
-            flag = False
-            print('正确的公里标为:' + str(trueDistance))
-        # 284018 + 30 得到的是有源应答器的里程
-        num = self.B_Name.split('-')[1]
-        if(num == '1'):
-            print('组内编号正确!')
-        else:
-            print('组内编号错误!')
-            flag = False
-        self.B_trueName = 'B'+str(trueDistance)+'-1'
-        if(flag):
-            print('名称正确')
-        else:
-            print('名称错误')
-        return flag
-
-    def verifyNum(self):
-        value = self.B_Num.split('-')    # 存放切割后的数组
-        num_DQu = value[0]  # 编号的大区号
-        num_FQu = value[1]  # 编号的分区号
-        num_CZ = value[2]    # 编号的车站号
-        num_cellNum = value[3]  # 单元编号
-        num_Num =  value[4]     # 应答器组内编号
-
-        # 未来的思路
-        # 现在我们的判断，对于单元编号和组内编号使一个写死的值
-        # 在将来，会结合数组来实现
-        if(num_DQu == Sta_DQu and num_FQu == Sta_FQu and num_CZ == Sta_CZ and
-            num_cellNum == '001' and num_Num == '1'):
-            self.B_trueNum = self.B_Num
-            print('应答器编号正确!')
-            return True
-        else:
-            if (num_DQu != Sta_DQu):
-                print('大区编号错误!')
-            if (num_FQu != Sta_FQu):
-                print('分区编号错误!')
-            if (num_CZ != Sta_CZ):
-                print('车站号错误!')
-            if (num_cellNum != '001'):
-                print('单元号错误!')
-            if (num_Num != '1'):
-                print('组内编号错误!')
-            self.B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-001'+'-1'
-            return False
-        pass
-
-# 有源应答器类继承于应答器类
-# 重写了里程验证和类型验证
-class Active_Transponder(Transponder):
-    def verifyType(self):
-        if(self.B_Type == '有源'):
-            print('应答器类型正确！')
-            self.B_trueType = self.B_Type
-            return True
-        else:
-            print('应答器类型错误!')
-            self.B_trueType = '有源'
-            return False
-    pass
+text = '建议修改为：'
 
 # 获取+号后面里程信息，并返回
 def getLocation(location):
@@ -162,20 +70,113 @@ def verifyLocation(reference, spacing, B_Location, index, *args):
         if true_location<100 :
             true_location='0'+str(true_location)
         B_trueLocation = B_Location.split('+')[0]+'+'+str(true_location)
+        suggest = text + B_trueLocation
         print('里程错误！正确的里程为:'+B_trueLocation)
+        verify(index, B_Location, suggest)
         # print(B_Location)
     else:
         if(args[0]=='ZX'):
             if(sg_location+450 < ponder_location):
                 print('里程错误！正确的里程为：' + str(sg_location+450))
+                suggest = text + str(sg_location+450)
+                verify(index, B_Location, suggest)
         elif(args[0]=='DW'):
             if(sg_location-250 < ponder_location ):
                 print('里程错误！正确的里程为：' + str(sg_location-250))
+                suggest = text + str(sg_location+450)
+                verify(index, B_Location, suggest)
         else:
             print('里程正确!')
         B_trueLocation = B_Location
     return B_trueLocation
 
+# 验证名称
+def verifyName(B_trueLocation, B_Name, index):
+    # B_trueLocation = judgeLocation()
+    flag = True
+    initials = B_Name[0]
+    # 判断首字母是否为 'B'
+    if (initials == 'B'):
+        print('首字母正确')
+    else:
+        flag = False
+        print('首字母错误')
+    shuzi = B_trueLocation.split('K')[1]
+    _distance = shuzi.replace('+', '')   # 将 '+' 消除
+    distance = int(_distance[0:4])      # 取前四位
+    if (distance % 2 == 0):
+        trueDistance = distance + 1     # 得到正确的公里标
+    else:
+        trueDistance = distance
+    Km_mark = int(B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
+    if(trueDistance == Km_mark):
+        print('公里标正确！')
+    else:
+        flag = False
+        print('公里标错误！') 
+    # 284018 + 30 得到的是有源应答器的里程
+    num = B_Name.split('-')[1]
+    if(num == str(index)):
+        print('组内编号正确!')
+    else:
+        print('组内编号错误!')
+        flag = False
+    B_trueName = 'B'+str(trueDistance)+'-'+str(index)
+    suggest = text + B_trueName
+    if(flag):
+        print('名称正确')
+    else:
+        verify(index, B_Name, suggest)
+
+# 验证编号
+def verifyNum(B_Num, index, indexNum):
+    value = B_Num.split('-')    # 存放切割后的数组
+    num_DQu = value[0]  # 编号的大区号
+    num_FQu = value[1]  # 编号的分区号
+    num_CZ = value[2]    # 编号的车站号
+    num_cellNum = value[3]  # 单元编号
+    num_Num =  value[4]     # 应答器组内编号
+    # 未来的思路
+    # 现在我们的判断，对于单元编号和组内编号使一个写死的值
+    # 在将来，会结合数组来实现
+    if(num_DQu == Sta_DQu and num_FQu == Sta_FQu and num_CZ == Sta_CZ and
+        num_cellNum == '00'+str(indexNum) and num_Num == str(index)):
+        print('应答器编号正确!')
+    else:
+        if (num_DQu != Sta_DQu):
+            print('大区编号错误!')
+        if (num_FQu != Sta_FQu):
+            print('分区编号错误!')
+        if (num_CZ != Sta_CZ):
+            print('车站号错误!')
+        if (num_cellNum != '001'):
+            print('单元号错误!')
+        if (num_Num != '1'):
+            print('组内编号错误!')
+        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-00'+str(indexNum)+'-'+str(index)
+        suggest = text + B_trueNum
+        verify(index, B_Num, suggest)
+
+# 验证设备类型
+def verifyType(index, use, ponderType, indexNum):
+    def _verifyType(ponderType,trueTpye,index):
+        if(ponderType==trueTpye):
+            print('设备类型正确!')
+        else:
+            suggest = text + trueTpye
+            verify(index, ponderType, suggest)
+    if(use=='CZ-C01' or use=='CZ-C02'):
+        if(indexNum == 0):
+            _verifyType(ponderType,'有源',index)
+        else:
+            _verifyType(ponderType,'无源',index)
+    elif(use=='JZ'):
+        if(indexNum == 2):
+            _verifyType(ponderType,'有源',index)
+        else:
+            _verifyType(ponderType,'无源',index)
+    else:
+        _verifyType(ponderType,'无源',index)
 
 # 这里用到了我们之前导入的 copy
 workbook = copy(ponder_wb)
@@ -183,21 +184,10 @@ worksheet = workbook.get_sheet(0)
 # 设置样式
 style = xlwt.easyxf('font:name 宋体, color-index red')
 
-# def verify(reference,spacing):
-#     # 根据返回值判断是否需要标红
-#     if(not ponder.verifyLocation(reference,spacing)):
-#         worksheet.write(2, 3, ponder.B_Location, style)
-#         worksheet.write(2, 3+7, ponder.B_trueLocation, style)
-#     if(not ponder.verifyName(ponder.B_trueLocation)):
-#         worksheet.write(2, 1, ponder.B_Name, style)
-#         worksheet.write(2, 1+7, ponder.B_trueName, style)
-#     if(not ponder.verifyNum()):
-#         worksheet.write(2, 2, ponder.B_Num, style)
-#         worksheet.write(2, 2+7, ponder.B_trueNum, style)
-#     if(not ponder.verifyType()):
-#         worksheet.write(2, 4, ponder.B_Type, style)
-#         worksheet.write(2, 4+7, ponder.B_trueType, style)
-
+def verify(index, value, suggest):
+    # 根据返回值判断是否需要标红
+    worksheet.write(index, index, value, style)
+    worksheet.write(index, index+7, suggest, style)
 
 # for y in range(2, len(ponderSet)-3):
 #     if(y == 2):
