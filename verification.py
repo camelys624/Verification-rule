@@ -38,14 +38,20 @@ for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
             signal.append(signal_ws.cell(r,s).value)
         signalSet.append(signal)
 
+# 定义一个存放应答器组的数组
+ponders = []
+ponders[0] = ponderSet[2:5]
+ponders[1] = ponderSet[5:8]
+ponders[2] = ponderSet[8:10]
+ponders[3] = ponderSet[10:12]
+ponders[4] = ponderSet[12:14]
+ponders[5] = ponderSet[14:15]
+ponders[6] = ponderSet[15:18]
+
+# 定义一个存放用途的数组
+_use = ['CZ-C01', 'CZ-C02', 'DW,YG0/2', 'DW，ZX0/2/FZX2/0', 'DW,FYG2/0', 'DW', 'JZ']
+
 # 定义其他要用到的变量
-CZ_C01 = ponderSet[2:5]
-CZ_C02 = ponderSet[5:8]
-YG = ponderSet[8:10]
-ZX = ponderSet[10:12]
-FYG = ponderSet[12:14]
-DW = ponderSet[14:15]
-JX = ponderSet[15:18]
 S_Out = signalSet[0][3]   # 信号机位置
 S_Through = signalSet[1][3]  # 通过信号机位置
 S_In = signalSet[2][3]      # 进站信号机位置
@@ -62,7 +68,7 @@ def getLocation(location):
     return sg_location
 
 # 判断里程是否正确
-def verifyLocation(reference, spacing, B_Location, index, *args):
+def verifyLocation(row, reference, spacing, B_Location, *args):
     sg_location=getLocation(reference)
     ponder_location=getLocation(B_Location)
     true_location=sg_location+spacing
@@ -72,26 +78,26 @@ def verifyLocation(reference, spacing, B_Location, index, *args):
         B_trueLocation = B_Location.split('+')[0]+'+'+str(true_location)
         suggest = text + B_trueLocation
         print('里程错误！正确的里程为:'+B_trueLocation)
-        verify(index, B_Location, suggest)
+        verify(row, 3, B_Location, suggest)
         # print(B_Location)
     else:
         if(args[0]=='ZX'):
             if(sg_location+450 < ponder_location):
                 print('里程错误！正确的里程为：' + str(sg_location+450))
                 suggest = text + str(sg_location+450)
-                verify(index, B_Location, suggest)
+                verify(row, 3, B_Location, suggest)
         elif(args[0]=='DW'):
             if(sg_location-250 < ponder_location ):
                 print('里程错误！正确的里程为：' + str(sg_location-250))
                 suggest = text + str(sg_location+450)
-                verify(index, B_Location, suggest)
+                verify(row, 3, B_Location, suggest)
         else:
             print('里程正确!')
         B_trueLocation = B_Location
     return B_trueLocation
 
 # 验证名称
-def verifyName(B_trueLocation, B_Name, index):
+def verifyName(row, B_trueLocation, B_Name, index):
     # B_trueLocation = judgeLocation()
     flag = True
     initials = B_Name[0]
@@ -126,10 +132,10 @@ def verifyName(B_trueLocation, B_Name, index):
     if(flag):
         print('名称正确')
     else:
-        verify(index, B_Name, suggest)
+        verify(row, 1, B_Name, suggest)
 
-# 验证编号
-def verifyNum(B_Num, index, indexNum):
+# 验证编号,先不忙验证，有点绕
+def verifyNum(row, B_Num, index):
     value = B_Num.split('-')    # 存放切割后的数组
     num_DQu = value[0]  # 编号的大区号
     num_FQu = value[1]  # 编号的分区号
@@ -139,64 +145,70 @@ def verifyNum(B_Num, index, indexNum):
     # 未来的思路
     # 现在我们的判断，对于单元编号和组内编号使一个写死的值
     # 在将来，会结合数组来实现
-    if(num_DQu == Sta_DQu and num_FQu == Sta_FQu and num_CZ == Sta_CZ and
-        num_cellNum == '00'+str(indexNum) and num_Num == str(index)):
+    if(num_DQu == Sta_DQu and num_FQu == Sta_FQu
+     and num_CZ == Sta_CZ 
+    #  andnum_cellNum == '00'+str(indexNum) 
+     and num_Num == str(index)):
         print('应答器编号正确!')
     else:
         if (num_DQu != Sta_DQu):
             print('大区编号错误!')
-        if (num_FQu != Sta_FQu):
+        elif (num_FQu != Sta_FQu):
             print('分区编号错误!')
-        if (num_CZ != Sta_CZ):
+        elif (num_CZ != Sta_CZ):
             print('车站号错误!')
-        if (num_cellNum != '001'):
-            print('单元号错误!')
-        if (num_Num != '1'):
+        # elif (num_cellNum != '001'):
+        #     print('单元号错误!')
+        elif (num_Num != '1'):
             print('组内编号错误!')
-        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-00'+str(indexNum)+'-'+str(index)
+        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+num_cellNum+'-'+str(index)
         suggest = text + B_trueNum
-        verify(index, B_Num, suggest)
+        verify(row, 2, B_Num, suggest)
 
 # 验证设备类型
-def verifyType(index, use, ponderType, indexNum):
-    def _verifyType(ponderType,trueTpye,index):
+def verifyType(row, use, ponderType, indexNum):
+    def _verifyType(row, ponderType,trueTpye):
         if(ponderType==trueTpye):
             print('设备类型正确!')
         else:
             suggest = text + trueTpye
-            verify(index, ponderType, suggest)
+            verify(row, 4, ponderType, suggest)
     if(use=='CZ-C01' or use=='CZ-C02'):
         if(indexNum == 0):
-            _verifyType(ponderType,'有源',index)
+            _verifyType(row, ponderType,'有源')
         else:
-            _verifyType(ponderType,'无源',index)
+            _verifyType(row, ponderType,'无源')
     elif(use=='JZ'):
         if(indexNum == 2):
-            _verifyType(ponderType,'有源',index)
+            _verifyType(row, ponderType,'有源')
         else:
-            _verifyType(ponderType,'无源',index)
+            _verifyType(row, ponderType,'无源')
     else:
-        _verifyType(ponderType,'无源',index)
+        _verifyType(row, ponderType,'无源')
 
+
+# 验证用途
+def verifyUse(row, use, trueUse):
+    if(use == trueUse):
+        print('用途正确')
+    else:
+        suggest = text + trueUse
+        verify(row, 5, use, suggest)
 # 这里用到了我们之前导入的 copy
 workbook = copy(ponder_wb)
 worksheet = workbook.get_sheet(0)
 # 设置样式
 style = xlwt.easyxf('font:name 宋体, color-index red')
 
-def verify(index, value, suggest):
+def verify(row, col, value, suggest):
     # 根据返回值判断是否需要标红
-    worksheet.write(index, index, value, style)
-    worksheet.write(index, index+7, suggest, style)
+    worksheet.write(row, col, value, style)
+    worksheet.write(row, col+7, suggest, style)
 
-# for y in range(2, len(ponderSet)-3):
-#     if(y == 2):
-#         # 创建有源应答器实例
-#         ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
-#         verify(S_Out,30)
-#         R_Reference = ponder.B_trueLocation
-#     if(y == 5):
-#         ponder = Active_Transponder(ponderSet[y][1],ponderSet[y][2],ponderSet[y][3],ponderSet[y][4])
-#         verify(R_Reference, 200)
+# 开始验证
+for i in range(len(ponders)):
+    for j in range(len(ponders[i])):
+        print('sorry')
+        # 验证规则
 
 workbook.save('verified.xls')
