@@ -40,16 +40,17 @@ for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
 
 # 定义一个存放应答器组的数组
 ponders = []
-ponders[0] = ponderSet[2:5]
-ponders[1] = ponderSet[5:8]
-ponders[2] = ponderSet[8:10]
-ponders[3] = ponderSet[10:12]
-ponders[4] = ponderSet[12:14]
-ponders[5] = ponderSet[14:15]
-ponders[6] = ponderSet[15:18]
+ponders.append(ponderSet[2:5])  # 取出第一个应答器组
+ponders.append(ponderSet[5:8])
+ponders.append(ponderSet[8:10])
+ponders.append(ponderSet[10:12])
+ponders.append(ponderSet[12:14])
+ponders.append(ponderSet[14:15])
+ponders.append(ponderSet[15:18])
 
+print(ponders)
 # 定义一个存放用途的数组
-_use = ['CZ-C01', 'CZ-C02', 'DW,YG0/2', 'DW，ZX0/2/FZX2/0', 'DW,FYG2/0', 'DW', 'JZ']
+_use = ['CZ-C01', 'CZ-C02', 'DW,YG0/2', 'DW,ZX0/2/FZX2/0', 'DW,FYG2/0', 'DW', 'JZ']
 
 # 定义其他要用到的变量
 S_Out = signalSet[0][3]   # 信号机位置
@@ -68,7 +69,14 @@ def getLocation(location):
     return sg_location
 
 # 判断里程是否正确
-def verifyLocation(row, reference, spacing, B_Location, *args):
+def verifyLocation(row, reference, B_Location, *args):
+    if(args[0]=='CZ-C01' and args[1]==0):
+        spacing = 30
+    elif(args[1]==0):
+        spacing =200
+    else:
+        spacing = 5
+
     sg_location=getLocation(reference)
     ponder_location=getLocation(B_Location)
     true_location=sg_location+spacing
@@ -81,7 +89,7 @@ def verifyLocation(row, reference, spacing, B_Location, *args):
         verify(row, 3, B_Location, suggest)
         # print(B_Location)
     else:
-        if(args[0]=='ZX'):
+        if(args[0]=='DW，ZX0/2/FZX2/0'):
             if(sg_location+450 < ponder_location):
                 print('里程错误！正确的里程为：' + str(sg_location+450))
                 suggest = text + str(sg_location+450)
@@ -97,7 +105,7 @@ def verifyLocation(row, reference, spacing, B_Location, *args):
     return B_trueLocation
 
 # 验证名称
-def verifyName(row, B_trueLocation, B_Name, index):
+def verifyName(row, B_trueLocation, B_Name, use, index):
     # B_trueLocation = judgeLocation()
     flag = True
     initials = B_Name[0]
@@ -114,20 +122,24 @@ def verifyName(row, B_trueLocation, B_Name, index):
         trueDistance = distance + 1     # 得到正确的公里标
     else:
         trueDistance = distance
-    Km_mark = int(B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
-    if(trueDistance == Km_mark):
-        print('公里标正确！')
+    if(use == 'JZ'):
+        print('公里标正确')
     else:
-        flag = False
-        print('公里标错误！') 
+        Km_mark = int(B_Name[1:5])                 # 提取名称的公里标，ykksdadsad -> [y,k,k,s,d,a]
+        if(trueDistance == Km_mark):
+            print('公里标正确！')
+        else:
+            flag = False
+            print('公里标错误！') 
     # 284018 + 30 得到的是有源应答器的里程
-    num = B_Name.split('-')[1]
-    if(num == str(index)):
-        print('组内编号正确!')
-    else:
-        print('组内编号错误!')
-        flag = False
-    B_trueName = 'B'+str(trueDistance)+'-'+str(index)
+    if(use != 'DW'):
+        num = B_Name.split('-')[1]
+        if(num == str(index+1)):
+            print('组内编号正确!')
+        else:
+            print('组内编号错误!')
+            flag = False
+    B_trueName = 'B'+str(trueDistance)+'-'+str(index+1)
     suggest = text + B_trueName
     if(flag):
         print('名称正确')
@@ -148,7 +160,7 @@ def verifyNum(row, B_Num, index):
     if(num_DQu == Sta_DQu and num_FQu == Sta_FQu
      and num_CZ == Sta_CZ 
     #  andnum_cellNum == '00'+str(indexNum) 
-     and num_Num == str(index)):
+     and num_Num == str(index+1)):
         print('应答器编号正确!')
     else:
         if (num_DQu != Sta_DQu):
@@ -161,12 +173,12 @@ def verifyNum(row, B_Num, index):
         #     print('单元号错误!')
         elif (num_Num != '1'):
             print('组内编号错误!')
-        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+num_cellNum+'-'+str(index)
+        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+num_cellNum+'-'+str(index+1)
         suggest = text + B_trueNum
         verify(row, 2, B_Num, suggest)
 
 # 验证设备类型
-def verifyType(row, use, ponderType, indexNum):
+def verifyType(row, use, ponderType, index):
     def _verifyType(row, ponderType,trueTpye):
         if(ponderType==trueTpye):
             print('设备类型正确!')
@@ -174,12 +186,12 @@ def verifyType(row, use, ponderType, indexNum):
             suggest = text + trueTpye
             verify(row, 4, ponderType, suggest)
     if(use=='CZ-C01' or use=='CZ-C02'):
-        if(indexNum == 0):
+        if(index == 0):
             _verifyType(row, ponderType,'有源')
         else:
             _verifyType(row, ponderType,'无源')
     elif(use=='JZ'):
-        if(indexNum == 2):
+        if(index == 2):
             _verifyType(row, ponderType,'有源')
         else:
             _verifyType(row, ponderType,'无源')
@@ -206,9 +218,23 @@ def verify(row, col, value, suggest):
     worksheet.write(row, col+7, suggest, style)
 
 # 开始验证
+# 定义一个计数器
+counter = 2
+reference = S_Out
 for i in range(len(ponders)):
     for j in range(len(ponders[i])):
-        print('sorry')
+        Pname = ponders[i][j][1]
+        Pnum = ponders[i][j][2]
+        Plocation = ponders[i][j][3]
+        Ptype = ponders[i][j][4]
+        Puse = ponders[i][j][5]
+        trueLocation = verifyLocation(counter, reference, Plocation,*[_use[i],j])
+        verifyName(counter, trueLocation, Pname, _use[i], j)
+        # verifyNum(count, Pnum, j) 暂时不验证
+        verifyType(counter, _use[i], Ptype, j)
+        verifyUse(counter, Puse, _use[i])
+        reference = trueLocation
+        counter += 1
         # 验证规则
 
 workbook.save('verified.xls')
