@@ -179,18 +179,21 @@ def verifyNum(row, B_Num, index):
 
 # 验证设备类型
 def verifyType(row, use, ponderType, index):
+    # 私有方法，通过我们给定的正确类型来验证应答器是否正确
     def _verifyType(row, ponderType,trueTpye):
         if(ponderType==trueTpye):
             print('设备类型正确!')
         else:
             suggest = text + trueTpye
             verify(row, 4, ponderType, suggest)
+
+    # 如果应答器类型是 'CZ-C01' 或者 'CZ-C02' 那么这个应答器组第一个应答器就是有源应答器
     if(use=='CZ-C01' or use=='CZ-C02'):
         if(index == 0):
             _verifyType(row, ponderType,'有源')
         else:
             _verifyType(row, ponderType,'无源')
-    elif(use=='JZ'):
+    elif(use=='JZ'):    # 同理，这个应答器组就是最后一个是有源应答器
         if(index == 2):
             _verifyType(row, ponderType,'有源')
         else:
@@ -218,7 +221,7 @@ def verify(row, col, value, suggest):
     worksheet.write(row, col+7, suggest, style)
 
 # 开始验证
-# 定义一个计数器
+# 定义一个计数器,因为在 excel 中是从第二行开始的，所以定义为2
 counter = 2
 reference = S_Out
 for i in range(len(ponders)):
