@@ -27,8 +27,11 @@ for r in range(ponder_ws.nrows):    # 2
         ponder.append(ponder_ws.cell(r,c).value)
     ponderSet.append(ponder)
 
-for s in range(station_ws.ncols):
-    staSet.append(station_ws.cell(2,s).value)
+for s in range(station_ws.nrows):
+    station = []
+    for st in range(station_ws.ncols):
+        station.append(station_ws.cell(s,st).value)
+    staSet.append(station)
 
 for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
     signal = []
@@ -56,9 +59,10 @@ _use = ['CZ-C01', 'CZ-C02', 'DW,YG0/2', 'DW,ZX0/2/FZX2/0', 'DW,FYG2/0', 'DW', 'J
 S_Out = signalSet[0][3]   # 信号机位置
 S_Through = signalSet[1][3]  # 通过信号机位置
 S_In = signalSet[2][3]      # 进站信号机位置
-Sta_DQu = str(int(staSet[2]))          # 大区号 float 3.0 int -> 3
-Sta_FQu = str(int(staSet[3]))         # 分区号
-Sta_CZ = str(int(staSet[4]))          # 车站号
+Sta_DQu = str(int(staSet[2][2]))          # 大区号 float 3.0 int -> 3
+Sta_FQu = str(int(staSet[2][3]))         # 分区号
+Sta_CZ1 = str(int(staSet[2][4]))          # 颜家垄
+Sta_CZ2 = str(int(staSet[3][4]))          # 长塘线路所
 R_Reference = ''                   # 定义参照点
 text = '建议修改为：'
 
@@ -67,6 +71,11 @@ def getLocation(location):
     sg_location=location.split('+')[1]
     sg_location=int(sg_location)
     return sg_location
+
+def getLocNum(location):
+    value = location.split('K')[1]
+    _distance = value.replace('+', '')
+    return int(_distance[0:4])
 
 # 判断里程是否正确
 def verifyLocation(row, reference, B_Location, *args):
@@ -115,9 +124,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
     else:
         flag = False
         print('首字母错误')
-    shuzi = B_trueLocation.split('K')[1]
-    _distance = shuzi.replace('+', '')   # 将 '+' 消除
-    distance = int(_distance[0:4])      # 取前四位
+    distance = getLocNum(B_trueLocation)
     if (distance % 2 == 0):
         trueDistance = distance + 1     # 得到正确的公里标
     else:
@@ -139,7 +146,10 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         else:
             print('组内编号错误!')
             flag = False
-    B_trueName = 'B'+str(trueDistance)+'-'+str(index+1)
+    if(use != 'DW'):
+        B_trueName = 'B'+str(trueDistance)+'-'+str(index+1)
+    else:
+        B_trueName = 'B'+str(trueDistance)
     suggest = text + B_trueName
     if(flag):
         print('名称正确')
@@ -147,21 +157,32 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         verify(row, 1, B_Name, suggest)
 
 # 验证编号,先不忙验证，有点绕
-def verifyNum(row, B_Num, index):
+def verifyNum(row, B_Num, location, use, index):
     value = B_Num.split('-')    # 存放切割后的数组
     num_DQu = value[0]  # 编号的大区号
     num_FQu = value[1]  # 编号的分区号
     num_CZ = value[2]    # 编号的车站号
     num_cellNum = value[3]  # 单元编号
-    num_Num =  value[4]     # 应答器组内编号
+    if(use != 'DW'):
+        num_Num =  value[4]     # 应答器组内编号
+
+    locaNum = getLocNum(location)
+    T_locaNum = getLocNum(S_Through)
+
+    if(locaNum < T_locaNum):
+        Sta_CZ = Sta_CZ1
+    else:
+        Sta_CZ = Sta_CZ2
+
     # 未来的思路
     # 现在我们的判断，对于单元编号和组内编号使一个写死的值
     # 在将来，会结合数组来实现
     if(num_DQu == Sta_DQu and num_FQu == Sta_FQu
-     and num_CZ == Sta_CZ 
-    #  andnum_cellNum == '00'+str(indexNum) 
-     and num_Num == str(index+1)):
-        print('应答器编号正确!')
+     and num_CZ == Sta_CZ):
+    #  andnum_cellNum == '00'+str(indexNum)
+        if(use != 'DW'):
+            if(num_Num == str(index+1)):
+                print('应答器编号正确!')
     else:
         if (num_DQu != Sta_DQu):
             print('大区编号错误!')
@@ -171,9 +192,12 @@ def verifyNum(row, B_Num, index):
             print('车站号错误!')
         # elif (num_cellNum != '001'):
         #     print('单元号错误!')
-        elif (num_Num != '1'):
+        elif (num_Num != str(index+1)):
             print('组内编号错误!')
-        B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+num_cellNum+'-'+str(index+1)
+        if(use!='DW'):
+            B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-'+num_cellNum+'-'+str(index+1)
+        else:
+            B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-'+num_cellNum
         suggest = text + B_trueNum
         verify(row, 2, B_Num, suggest)
 
@@ -219,6 +243,7 @@ def verify(row, col, value, suggest):
     # 根据返回值判断是否需要标红
     worksheet.write(row, col, value, style)
     worksheet.write(row, col+7, suggest, style)
+    worksheet.col(col+7).width = 256 * 25
 
 # 开始验证
 # 定义一个计数器,因为在 excel 中是从第二行开始的，所以定义为2
@@ -232,12 +257,15 @@ for i in range(len(ponders)):
         Ptype = ponders[i][j][4]
         Puse = ponders[i][j][5]
         trueLocation = verifyLocation(counter, reference, Plocation,*[_use[i],j])
+        if(j==0):
+            _reference = trueLocation
         verifyName(counter, trueLocation, Pname, _use[i], j)
-        # verifyNum(count, Pnum, j) 暂时不验证
+        verifyNum(counter, Pnum, trueLocation, _use[i], j) # 暂时不验证
         verifyType(counter, _use[i], Ptype, j)
         verifyUse(counter, Puse, _use[i])
         reference = trueLocation
         counter += 1
         # 验证规则
+    reference=_reference
 
 workbook.save('verified.xls')
