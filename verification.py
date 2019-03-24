@@ -87,7 +87,7 @@ def verifyLocation(row, reference, B_Location, *args):
         spacing = 5
 
     sg_location=getLocation(reference)
-    ponder_location=getLocation(B_Location)
+    ponder_location=getLocation(B_Location) # 应答器位置
     true_location=sg_location+spacing
     if (true_location>ponder_location):
         if true_location<100 :
