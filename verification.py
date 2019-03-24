@@ -137,7 +137,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
             print('公里标正确！')
         else:
             flag = False
-            print('公里标错误！') 
+            print('公里标错误！')
     # 284018 + 30 得到的是有源应答器的里程
     if(use != 'DW'):
         num = B_Name.split('-')[1]
