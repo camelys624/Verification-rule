@@ -81,6 +81,7 @@ def getLocNum(location):
 def verifyLocation(row, reference, B_Location, *args):
     if(args[0]=='CZ-C01' and args[1]==0):
         spacing = 30
+    elif(args[0]=='JZ')
     elif(args[1]==0):
         spacing =200
     else:
@@ -137,7 +138,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
             print('公里标正确！')
         else:
             flag = False
-            print('公里标错误！')
+            print('公里标错误！') 
     # 284018 + 30 得到的是有源应答器的里程
     if(use != 'DW'):
         num = B_Name.split('-')[1]
