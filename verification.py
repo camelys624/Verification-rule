@@ -71,17 +71,11 @@ R_Reference = ''                   # 定义参照点
 text = '建议修改为：'
 
 
-# 获取+号后面里程信息，并返回
-def getLocation(location):
-    sg_location = location.split('+')[1]
-    sg_location = int(sg_location)
-    return sg_location
-
-
+# 将里程转换为数字
 def getLocNum(location):
     value = location.split('K')[1]
     _distance = value.replace('+', '')
-    return int(_distance[0:4])
+    return int(_distance)
 
 
 def getUse():
@@ -96,6 +90,24 @@ def getUse():
     return _use
 
 
+# 验证数据是否存在
+def verifyExistence(use, location, reference):
+    if(use == 'CZ-C01'):
+        verifyLocation = reference + 30
+    elif(use == 'JZ'):
+        verifyLocation = reference - 30
+    elif(use == 'DW'):
+        verify == reference - 250
+    else:
+        verifyLocation == reference + 200
+    
+    distance = verifyLocation - getLocNum(location)
+    if(-30 < distance < 150):
+        return True
+    else:
+        return False
+
+
 # 判断里程是否正确
 def verifyLocation(row, reference, B_Location, *args):
     if(args[0] == 'CZ-C01' and args[1] == 0):
@@ -107,13 +119,11 @@ def verifyLocation(row, reference, B_Location, *args):
     else:
         spacing = 5
 
-    sg_location = getLocation(reference)
-    ponder_location = getLocation(B_Location)  # 应答器位置
+    sg_location = getLocNum(reference)
+    ponder_location = getLocNum(B_Location)  # 应答器位置
     true_location = sg_location+spacing
     if (true_location > ponder_location):
-        if true_location < 100:
-            true_location = '0'+str(true_location)
-        B_trueLocation = B_Location.split('+')[0]+'+'+str(true_location)
+        B_trueLocation = 'SHF'+str(true_location)[0:3]+'+'+str(true_location)[3:6]
         suggest = text + B_trueLocation
         print('里程错误！正确的里程为:'+B_trueLocation)
         verify(row, 3, B_Location, suggest)
@@ -146,7 +156,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
     else:
         flag = False
         print('首字母错误')
-    distance = getLocNum(B_trueLocation)
+    distance = int(str(getLocNum(B_trueLocation))[0:4])
     if (distance % 2 == 0):
         trueDistance = distance + 1     # 得到正确的公里标
     else:
@@ -279,25 +289,68 @@ def verify(row, col, value, suggest):
 
 # 开始验证
 # 定义一个计数器,因为在 excel 中是从第二行开始的，所以定义为2
-counter = 2
+index = 2   # 数据表位置
+flag = 0    # 应答器标志
 reference = S_Out
-for i in range(2:len(ponderSet)-3):
-    Pname = ponders[i][1]
-    Pnum = ponders[i][2]
-    Plocation = ponders[i][3]
-    Ptype = ponders[i][4]
-    Puse = ponders[i][5]
+use = getUse()
+_use = use[0]
+
+while (1 < index < len(ponderSet)-3):
+    end = index + use[1][flag]
+    ponders = ponderSet[index:end]
+    for i in range(len(ponders)):
+        Pname = ponders[i][1]   # 待验证的应答器名称
+        Pnum = ponders[i][2]    # 待验证的应答器编号
+        Plocation = ponders[i][3]   # 待验证的应答器里程
+        Ptype = ponders[i][4]   # 待验证的应答器类型
+        Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
+
+        # 判断数据是否缺失，如果缺失，则执行下一个应答器
+        if(not verifyExistence(_use[flag], Plocation, reference)):
+            index += 1
+            continue
+
+        # 验证里程并得到正确的里程
         trueLocation = verifyLocation(
-            counter, reference, Plocation, *[_use[i], j])
-        if(j == 0):
+            index, reference, Plocation, *[_use[flag], i])
+        if(i == 0):
+            # 将第一个应答器的正确位置作为应答器组的位置
             _reference = trueLocation
-        verifyName(counter, trueLocation, Pname, _use[i], j)
-        verifyNum(counter, Pnum, trueLocation, _use[i], j)  # 暂时不验证
-        verifyType(counter, _use[i], Ptype, j)
-        verifyUse(counter, Puse, _use[i])
+
+        # 验证名称
+        verifyName(index, trueLocation, Pname, _use[flag], i)
+        
+        # 验证编号
+        verifyNum(index, Pnum, trueLocation, _use[flag], i)  # 暂时不验证
+
+        # 验证类型
+        verifyType(index, _use[flag], Ptype, i)
+
+        # 验证用途(可省略)
+        verifyUse(index, Puse, _use[flag])
+        
         reference = trueLocation
-        counter += 1
-        # 验证规则
+        index += 1
+
     reference = _reference
+
+# for i in range(2:len(ponderSet)-3):
+#     Pname = ponders[i][1]
+#     Pnum = ponders[i][2]
+#     Plocation = ponders[i][3]
+#     Ptype = ponders[i][4]
+#     Puse = ponders[i][5]
+#         trueLocation = verifyLocation(
+#             counter, reference, Plocation, *[_use[i], j])
+#         if(j == 0):
+#             _reference = trueLocation
+#         verifyName(counter, trueLocation, Pname, _use[i], j)
+#         verifyNum(counter, Pnum, trueLocation, _use[i], j)  # 暂时不验证
+#         verifyType(counter, _use[i], Ptype, j)
+#         verifyUse(counter, Puse, _use[i])
+#         reference = trueLocation
+#         counter += 1
+#         # 验证规则
+#     reference = _reference
 
 workbook.save('verified.xls')
