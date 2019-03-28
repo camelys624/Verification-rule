@@ -7,7 +7,7 @@ import os
 transponder = './data/transponder.xls'    # 应答器
 station = './data/station.xls'    # 车站位置信息
 signal = './data/signalData.xls'  # 信号机信息
-grade = './data/jihen-road/grade.xls'  # 等级转换表
+grade = './data/jihen-road/grade.xlsx'  # 等级转换表
 
 # 打开 excel 表
 # formatting_info=True表示保持格式不变
@@ -86,25 +86,36 @@ def getUse():
                 'DW,ZX0/2/FZX2/0', 'DW,FYG2/0', 'DW', 'JZ'],
             [3, 3, 2, 2, 2, 1, 3]
         ]
-
-    return _use
+        return _use
+    else:
+        return []
 
 
 # 验证数据是否缺失
-def isMissing(use, location, reference):
-    if(use == 'CZ-C01'):
+def isMissing(use, location, reference, index):
+    reference = getLocNum(reference)
+    if(use == 'CZ-C01' and index == 0):
         verifyLocation = reference + 30
-    elif(use == 'JZ'):
+    elif(use == 'DW,ZX0/2/FZX2/0'):
+        verifyLocation = reference + 30
+    elif(use == 'JZ' and index == 0):
         verifyLocation = reference - 30
+    elif(use == 'JZ' and index != 0):
+        verifyLocation = reference - 5
     elif(use == 'DW'):
-        verifyLocation == reference - 250
-    else:
+        verifyLocation = reference - 250
+    elif(index == 0):
         verifyLocation = reference + 200
+    else:
+        verifyLocation = reference + 5
     
     distance = verifyLocation - getLocNum(location)
+    print(distance)
     if(-30 < distance < 150):
+        print('数据未缺失')
         return False
     else:
+        print('数据缺失')
         return True
 
 
@@ -112,8 +123,12 @@ def isMissing(use, location, reference):
 def verifyLocation(row, reference, B_Location, *args):
     if(args[0] == 'CZ-C01' and args[1] == 0):
         spacing = 30
-    elif(args[0] == 'JZ'):
+    elif(args[0] == 'JZ' and args[1] == 0):
         spacing = -30
+    elif(args[0] == 'JZ' and args[1] != 0):
+        spacing = -5
+    elif(args[0] == 'DW'):
+        spacing = -250
     elif(args[1] == 0):
         spacing = 200
     else:
@@ -123,7 +138,7 @@ def verifyLocation(row, reference, B_Location, *args):
     ponder_location = getLocNum(B_Location)  # 应答器位置
     true_location = sg_location+spacing
     if (true_location > ponder_location):
-        B_trueLocation = 'SHF'+str(true_location)[0:3]+'+'+str(true_location)[3:6]
+        B_trueLocation = 'JHK'+str(true_location)[0:3]+'+'+str(true_location)[3:6]
         suggest = text + B_trueLocation
         print('里程错误！正确的里程为:'+B_trueLocation)
         verify(row, 3, B_Location, suggest)
@@ -189,9 +204,8 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
     else:
         verify(row, 1, B_Name, suggest)
 
+
 # 验证编号,先不忙验证，有点绕
-
-
 def verifyNum(row, B_Num, location, use, index):
     value = B_Num.split('-')    # 存放切割后的数组
     num_DQu = value[0]  # 编号的大区号
@@ -237,11 +251,11 @@ def verifyNum(row, B_Num, location, use, index):
         suggest = text + B_trueNum
         verify(row, 2, B_Num, suggest)
 
+
 # 验证设备类型
-
-
 def verifyType(row, use, ponderType, index):
     # 私有方法，通过我们给定的正确类型来验证应答器是否正确
+    # print('设备类型', end='')
     def _verifyType(row, ponderType, trueTpye):
         if(ponderType == trueTpye):
             print('设备类型正确!')
@@ -293,7 +307,10 @@ index = 2   # 数据表位置
 flag = 0    # 应答器标志
 reference = S_Out
 use = getUse()
-_use = use[0]
+_reference = 0
+
+P_use = use[0]
+print(index)
 
 while (1 < index < len(ponderSet)-3):
     end = index + use[1][flag]
@@ -305,33 +322,39 @@ while (1 < index < len(ponderSet)-3):
         Ptype = ponders[i][4]   # 待验证的应答器类型
         Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
 
+        if(P_use[flag] == 'DW，ZX0/2/FZX2/0'):
+            reference = S_Through
+        elif(P_use[flag] == 'JZ' or P_use[flag] == 'DW'):
+            reference = S_In
+
         # 判断数据是否缺失，如果缺失，则执行下一个应答器
-        if(isMissing(_use[flag], Plocation, reference)):
+        print(reference)
+        if(isMissing(P_use[flag], Plocation, reference, i)):
             index += 1
             continue
 
         # 验证里程并得到正确的里程
         trueLocation = verifyLocation(
-            index, reference, Plocation, *[_use[flag], i])
+            index, reference, Plocation, *[P_use[flag], i])
         if(i == 0):
             # 将第一个应答器的正确位置作为应答器组的位置
             _reference = trueLocation
 
         # 验证名称
-        verifyName(index, trueLocation, Pname, _use[flag], i)
+        verifyName(index, trueLocation, Pname, P_use[flag], i)
         
         # 验证编号
-        verifyNum(index, Pnum, trueLocation, _use[flag], i)  # 暂时不验证
+        verifyNum(index, Pnum, trueLocation, P_use[flag], i)  # 暂时不验证
 
         # 验证类型
-        verifyType(index, _use[flag], Ptype, i)
+        verifyType(index, P_use[flag], Ptype, i)
 
         # 验证用途(可省略)
-        verifyUse(index, Puse, _use[flag])
+        verifyUse(index, Puse, P_use[flag])
         
         reference = trueLocation
         index += 1
-
+    flag += 1
     reference = _reference
 
 # for i in range(2:len(ponderSet)-3):
