@@ -97,9 +97,9 @@ def verifyExistence(use, location, reference):
     elif(use == 'JZ'):
         verifyLocation = reference - 30
     elif(use == 'DW'):
-        verify == reference - 250
+        verifyLocation == reference - 250
     else:
-        verifyLocation == reference + 200
+        verifyLocation = reference + 200
     
     distance = verifyLocation - getLocNum(location)
     if(-30 < distance < 150):
