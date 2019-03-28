@@ -90,8 +90,8 @@ def getUse():
     return _use
 
 
-# 验证数据是否存在
-def verifyExistence(use, location, reference):
+# 验证数据是否缺失
+def isMissing(use, location, reference):
     if(use == 'CZ-C01'):
         verifyLocation = reference + 30
     elif(use == 'JZ'):
@@ -103,9 +103,9 @@ def verifyExistence(use, location, reference):
     
     distance = verifyLocation - getLocNum(location)
     if(-30 < distance < 150):
-        return True
-    else:
         return False
+    else:
+        return True
 
 
 # 判断里程是否正确
@@ -306,7 +306,7 @@ while (1 < index < len(ponderSet)-3):
         Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
 
         # 判断数据是否缺失，如果缺失，则执行下一个应答器
-        if(not verifyExistence(_use[flag], Plocation, reference)):
+        if(isMissing(_use[flag], Plocation, reference)):
             index += 1
             continue
 
