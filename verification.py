@@ -99,9 +99,7 @@ def isMissing(use, location, reference, index):
     elif(use == 'DW,ZX0/2/FZX2/0'):
         verifyLocation = reference + 30
     elif(use == 'JZ' and index == 0):
-        verifyLocation = reference - 30
-    elif(use == 'JZ' and index != 0):
-        verifyLocation = reference - 5
+        verifyLocation = reference - 40
     elif(use == 'DW'):
         verifyLocation = reference - 250
     elif(index == 0):
@@ -124,9 +122,7 @@ def verifyLocation(row, reference, B_Location, *args):
     if(args[0] == 'CZ-C01' and args[1] == 0):
         spacing = 30
     elif(args[0] == 'JZ' and args[1] == 0):
-        spacing = -30
-    elif(args[0] == 'JZ' and args[1] != 0):
-        spacing = -5
+        spacing = -40
     elif(args[0] == 'DW'):
         spacing = -250
     elif(args[1] == 0):
@@ -315,17 +311,18 @@ print(index)
 while (1 < index < len(ponderSet)-3):
     end = index + use[1][flag]
     ponders = ponderSet[index:end]
+
+    if(P_use[flag] == 'DW，ZX0/2/FZX2/0'):
+        reference = S_Through
+    elif(P_use[flag] == 'JZ' or P_use[flag] == 'DW'):
+        reference = S_In
+
     for i in range(len(ponders)):
         Pname = ponders[i][1]   # 待验证的应答器名称
         Pnum = ponders[i][2]    # 待验证的应答器编号
         Plocation = ponders[i][3]   # 待验证的应答器里程
         Ptype = ponders[i][4]   # 待验证的应答器类型
         Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
-
-        if(P_use[flag] == 'DW，ZX0/2/FZX2/0'):
-            reference = S_Through
-        elif(P_use[flag] == 'JZ' or P_use[flag] == 'DW'):
-            reference = S_In
 
         # 判断数据是否缺失，如果缺失，则执行下一个应答器
         print(reference)
