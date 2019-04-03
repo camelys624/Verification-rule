@@ -2,6 +2,39 @@ import xlrd
 import xlwt
 from xlutils.copy import copy
 import os
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+pdfmetrics.registerFont(TTFont('song', '/usr/share/fonts/truetype/SimSun/SimSun.ttf'))
+
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph,SimpleDocTemplate
+from reportlab.lib import  colors
+
+Style=getSampleStyleSheet()
+
+bt = Style['Normal']     #字体的样式
+bt.fontName='song'    #使用的字体
+bt.fontSize=14            #字号
+bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+# bt.firstLineIndent = 32  #该属性支持第一行开头空格
+bt.leading = 20             #该属性是设置行距
+
+ct=Style['Normal']
+# ct.fontName='song'
+ct.fontSize=12
+ct.alignment=0             #居中
+
+ct.textColor = colors.red
+
+reportSet = []
+
+def report(report):
+    _report = []
+    for i in range(len(report)):
+        _report.append(Paragraph(report[i],bt))
+    pdf=SimpleDocTemplate('verifyReport.pdf')
+    pdf.multiBuild(_report)
+
 
 # path 路径
 transponder = './data/transponder.xls'    # 应答器
@@ -119,15 +152,21 @@ def isMissing(use, location, reference, index):
 
 # 判断里程是否正确
 def verifyLocation(row, reference, B_Location, *args):
+    title = '开始验证里程：'
     if(args[0] == 'CZ-C01' and args[1] == 0):
         spacing = 30
+        reason = '里程错误，该应答器应距离出站口30±0.5米！'
     elif(args[0] == 'JZ' and args[1] == 0):
+        reason = '里程错误，该应答器应距离进站信号机至少40±0.5米！'
         spacing = -40
     elif(args[0] == 'DW'):
+        reason = '里程错误，该应答器应距离进站信号机至少250米！'
         spacing = -250
     elif(args[1] == 0):
+        reason = '里程错误，应答器组之间的距离应大于200米！'
         spacing = 200
     else:
+        reason = '里程错误，应答器间距应为5±0.5米！'
         spacing = 5
 
     sg_location = getLocNum(reference)
@@ -138,6 +177,7 @@ def verifyLocation(row, reference, B_Location, *args):
         suggest = text + B_trueLocation
         print('里程错误！正确的里程为:'+B_trueLocation)
         verify(row, 3, B_Location, suggest)
+        reportSet.append(title+reason)
         # print(B_Location)
     else:
         if(args[0] == 'DW，ZX0/2/FZX2/0'):
@@ -152,6 +192,7 @@ def verifyLocation(row, reference, B_Location, *args):
                 verify(row, 3, B_Location, suggest)
         else:
             print('里程正确!')
+            reportSet.append(title+'里程正确！')
         B_trueLocation = B_Location
     return B_trueLocation
 
@@ -159,6 +200,8 @@ def verifyLocation(row, reference, B_Location, *args):
 # 验证名称
 def verifyName(row, B_trueLocation, B_Name, use, index):
     # B_trueLocation = judgeLocation()
+    title='开始验证名称：'
+    reason= ''
     flag = True
     initials = B_Name[0]
     # 判断首字母是否为 'B'
@@ -166,6 +209,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         print('首字母正确')
     else:
         flag = False
+        reason =reason + '名称应以B字母开头；'
         print('首字母错误')
     distance = int(str(getLocNum(B_trueLocation))[0:4])
     if (distance % 2 == 0):
@@ -181,6 +225,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
             print('公里标正确！')
         else:
             flag = False
+            reason = reason + '公里标错误，正确的公里标应为里程的数字位前四位或信号机名称，上奇下偶；'
             print('公里标错误！')
     # 284018 + 30 得到的是有源应答器的里程
     if(use != 'DW'):
@@ -188,6 +233,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         if(num == str(index+1)):
             print('组内编号正确!')
         else:
+            reason=reason + '组内编号错误，应为应答器排列顺序。'
             print('组内编号错误!')
             flag = False
     if(use != 'DW'):
@@ -197,12 +243,16 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
     suggest = text + B_trueName
     if(flag):
         print('名称正确')
+        reportSet.append(title+'应答器名称正确！')
     else:
         verify(row, 1, B_Name, suggest)
+        reportSet.append(title+reason)
 
 
 # 验证编号,先不忙验证，有点绕
 def verifyNum(row, B_Num, location, use, index):
+    title='开始验证编号：'
+    reason=''
     value = B_Num.split('-')    # 存放切割后的数组
     num_DQu = value[0]  # 编号的大区号
     num_FQu = value[1]  # 编号的分区号
@@ -228,17 +278,22 @@ def verifyNum(row, B_Num, location, use, index):
         if(use != 'DW'):
             if(num_Num == str(index+1)):
                 print('应答器编号正确!')
+                reportSet.append(title+'应答器编号正确')
     else:
         if (num_DQu != Sta_DQu):
             print('大区编号错误!')
+            reason=reason+'大区编号应与数据表中对应；'
         elif (num_FQu != Sta_FQu):
             print('分区编号错误!')
+            reason=reason+'分区编号应与数据表中对应；'
         elif (num_CZ != Sta_CZ):
             print('车站号错误!')
+            reason=reason+'车站编号应与车站表车站号对应；'
         # elif (num_cellNum != '001'):
         #     print('单元号错误!')
         elif (num_Num != str(index+1)):
             print('组内编号错误!')
+            reason=reason+'组内编号应为顺序编号。'
         if(use != 'DW'):
             B_trueNum = Sta_DQu+'-'+Sta_FQu+'-' + \
                 Sta_CZ+'-'+num_cellNum+'-'+str(index+1)
@@ -246,18 +301,22 @@ def verifyNum(row, B_Num, location, use, index):
             B_trueNum = Sta_DQu+'-'+Sta_FQu+'-'+Sta_CZ+'-'+num_cellNum
         suggest = text + B_trueNum
         verify(row, 2, B_Num, suggest)
+        reportSet.append(title+reason)
 
 
 # 验证设备类型
 def verifyType(row, use, ponderType, index):
+    title='开始验证设备类型：'
     # 私有方法，通过我们给定的正确类型来验证应答器是否正确
     # print('设备类型', end='')
     def _verifyType(row, ponderType, trueTpye):
         if(ponderType == trueTpye):
             print('设备类型正确!')
+            reportSet.append(title+'设备类型正确!')
         else:
             suggest = text + trueTpye
             verify(row, 4, ponderType, suggest)
+            reportSet.append(title+'该应答器设备类型应为：'+trueTpye)
 
     # 如果应答器类型是 'CZ-C01' 或者 'CZ-C02' 那么这个应答器组第一个应答器就是有源应答器
     if(use == 'CZ-C01' or use == 'CZ-C02'):
@@ -276,11 +335,14 @@ def verifyType(row, use, ponderType, index):
 
 # 验证用途
 def verifyUse(row, use, trueUse):
+    title='开始验证用途：'
     if(use == trueUse):
         print('用途正确')
+        reportSet.append(title+'用途正确！')
     else:
         suggest = text + trueUse
         verify(row, 5, use, suggest)
+        reportSet.append(title+'用途应与正确用途对应！')
 
 
 # 这里用到了我们之前导入的 copy
@@ -324,9 +386,13 @@ while (1 < index < len(ponderSet)-3):
         Ptype = ponders[i][4]   # 待验证的应答器类型
         Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
 
+        strReport = '-------------开始验证第' + str(index-1) + '行数据-------------'
+        reportSet.append(strReport)
+
         # 判断数据是否缺失，如果缺失，则执行下一个应答器
-        print(reference)
         if(isMissing(P_use[flag], Plocation, reference, i)):
+            strReport='第' + str(index-1) + '行数据缺失！'
+            reportSet.append(strReport)
             index += 1
             continue
 
@@ -354,23 +420,5 @@ while (1 < index < len(ponderSet)-3):
     flag += 1
     reference = _reference
 
-# for i in range(2:len(ponderSet)-3):
-#     Pname = ponders[i][1]
-#     Pnum = ponders[i][2]
-#     Plocation = ponders[i][3]
-#     Ptype = ponders[i][4]
-#     Puse = ponders[i][5]
-#         trueLocation = verifyLocation(
-#             counter, reference, Plocation, *[_use[i], j])
-#         if(j == 0):
-#             _reference = trueLocation
-#         verifyName(counter, trueLocation, Pname, _use[i], j)
-#         verifyNum(counter, Pnum, trueLocation, _use[i], j)  # 暂时不验证
-#         verifyType(counter, _use[i], Ptype, j)
-#         verifyUse(counter, Puse, _use[i])
-#         reference = trueLocation
-#         counter += 1
-#         # 验证规则
-#     reference = _reference
-
 workbook.save('verified.xls')
+report(reportSet)
