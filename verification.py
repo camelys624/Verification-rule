@@ -12,26 +12,41 @@ from reportlab.lib import  colors
 
 Style=getSampleStyleSheet()
 
-bt = Style['Normal']     #字体的样式
-bt.fontName='song'    #使用的字体
-bt.fontSize=14            #字号
-bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
-# bt.firstLineIndent = 32  #该属性支持第一行开头空格
-bt.leading = 20             #该属性是设置行距
 
-ct=Style['Normal']
-# ct.fontName='song'
-ct.fontSize=12
-ct.alignment=0             #居中
+# 设置PDF样式
+def setStyle(node):
+    bt = Style['Normal']     #字体的样式
+    bt.fontName='song'    #使用的字体
+    bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+    # bt.firstLineIndent = 32  #该属性支持第一行开头空格
+    bt.leading = 20             #该属性是设置行距
+    if node == 'title':
+        bt.fontSize=18            #字号
+        bt.alignment=0             #居左
+    elif node == 'heading':
+        bt.fontSize=24
+        bt.alignment=1
+    elif node == 'version':
+        bt.fontSize=12
+        bt.alignment=1
+    elif node == 'p-normal':
+        bt.fontSize=12
+        bt.alignment=0
+    elif node == 'p-error':
+        bt.fontSize=12
+        bt.alignment=0
+        bt.textColor = colors.red
 
-ct.textColor = colors.red
+    return bt
 
 reportSet = []
 
 def report(report):
+    heading = '毕业设计——列控基础数据验证'
     _report = []
     for i in range(len(report)):
-        _report.append(Paragraph(report[i],bt))
+        bt = setStyle(report[i][1])
+        _report.append(Paragraph(report[i][0],bt))
     pdf=SimpleDocTemplate('verifyReport.pdf')
     pdf.multiBuild(_report)
 
