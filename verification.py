@@ -20,10 +20,7 @@ def setStyle(node):
     bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
     # bt.firstLineIndent = 32  #该属性支持第一行开头空格
     bt.leading = 20             #该属性是设置行距
-    if node == 'title':
-        bt.fontSize=18            #字号
-        bt.alignment=0             #居左
-    elif node == 'heading':
+    if node == 'heading':
         bt.fontSize=24
         bt.alignment=1
     elif node == 'version':
@@ -42,8 +39,9 @@ def setStyle(node):
 reportSet = []
 
 def report(report):
-    heading = '毕业设计——列控基础数据验证'
     _report = []
+    heading = '毕业设计——列控工程数据验证'
+    _report.append(Paragraph(heading, setStyle('heading')))
     for i in range(len(report)):
         bt = setStyle(report[i][1])
         _report.append(Paragraph(report[i][0],bt))
@@ -203,7 +201,7 @@ def verifyLocation(row, reference, B_Location, *args):
         elif(args[0] == 'DW'):
             if(sg_location-250 < ponder_location):
                 print('里程错误！正确的里程为：' + str(sg_location-250))
-                suggest = text + str(sg_location+450)
+                suggest = text + str(sg_location-250)
                 verify(row, 3, B_Location, suggest)
         else:
             print('里程正确!')
