@@ -5,7 +5,7 @@ import os
 import time
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-pdfmetrics.registerFont(TTFont('song', '/usr/share/fonts/truetype/SimSun/SimSun.ttf'))
+pdfmetrics.registerFont(TTFont('song', '/usr/share/fonts/truetype/SimSun/SimSun.ttf'))  # 导入中文字体
 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph,SimpleDocTemplate
@@ -44,13 +44,14 @@ def setStyle(node):
     return bt
 
 # 定义全局变量
-reportSet = []
+reportSet = []  # 所有的错误信息，存放到此数组
 isTrueValue = True
 strReport = ''
 R_Reference = ''                   # 定义参照点
 text = '建议修改为：'
 
 # 导出PDF
+# report->保存验证信息的数组，total->总共验证的数据条数，errNum->错误数据
 def report(report, total, errNum):
     _report = []
     heading = '<p style="float: right;">毕业设计——列控工程数据验证</p>'
@@ -110,7 +111,7 @@ for r in range(signal_ws.nrows):    # 这个循环使循环信号机的名称
             signal.append(signal_ws.cell(r, s).value)
         signalSet.append(signal)
 
-
+# 全局变量
 S_Out = signalSet[0][3]   # 信号机位置
 S_Through = signalSet[1][3]  # 通过信号机位置
 S_In = signalSet[2][3]      # 进站信号机位置
@@ -268,7 +269,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         strReport=strReport+'，【名称错误】->【'+reason+'】'
         isTrueValue = False
     return {
-        "report":strReport,
+        "report": strReport,
         "isTrue": isTrueValue
         }
 
@@ -414,7 +415,7 @@ def main():
     _reference = 0
     P_use = use[0]
     total = len(ponderSet)
-    errNum = 0
+    errNum = 0  # 错误的数据条数
 
     while (1 < index < total-3):
         isTrueValue = True
@@ -488,7 +489,10 @@ def main():
         flag += 1
         reference = _reference
 
+    # 保存excel文件
     workbook.save('verified.xls')
+
+    # 导出报表信息
     report(reportSet, total-5, errNum)
 
 
