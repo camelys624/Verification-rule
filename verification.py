@@ -5,43 +5,78 @@ import os
 import time
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-pdfmetrics.registerFont(TTFont('song', '/usr/share/fonts/truetype/SimSun/SimSun.ttf'))  # 导入中文字体
-
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph,SimpleDocTemplate
 from reportlab.lib import  colors
 
-Style=getSampleStyleSheet()
+pdfmetrics.registerFont(TTFont('song', './font/SimSun.ttf'))  # 导入中文字体
 
 
 # 设置PDF样式
-def setStyle(node):
-    bt = Style['Normal']     #字体的样式
-    bt.fontName='song'    #使用的字体
-    bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
-    bt.leading = 30             #该属性是设置行距
-    # bt.alignment=1
-    if node == 'heading':
+class Graphs:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def setHead():
+        Style=getSampleStyleSheet()
+        bt = Style['Normal']     #字体的样式
+        bt.fontName='song'    #使用的字体
+        bt.leading = 30             #该属性是设置行距
         bt.fontSize=24
         bt.alignment=1
-    elif node == 'version':
+        heading = '毕业设计——列控工程数据验证'
+        head = Paragraph(heading, bt)
+        return head
+    @staticmethod
+    def setVersion():
+        Style=getSampleStyleSheet()
+        bt = Style['Normal']     #字体的样式
+        bt.fontName='song'    #使用的字体
+        bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+        bt.leading = 30             #该属性是设置行距
         bt.fontSize=12
         bt.alignment=1
-    elif node == 'title':
+        date=str(time.localtime().tm_year)+'年'+str(time.localtime().tm_mon)+'月'+str(time.localtime().tm_mday)+'日'+str(time.localtime().tm_hour)+'时'+str(time.localtime().tm_min)+'分'
+        version = '版本号:v-0.0.1       ' + date + '提交        作者：陈晨'
+        versionText = Paragraph(version, bt)
+        return versionText
+    @staticmethod
+    def setTitle():
+        Style=getSampleStyleSheet()
+        bt = Style['Normal']     #字体的样式
+        bt.fontName='song'    #使用的字体
+        bt.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+        bt.leading = 30             #该属性是设置行距
         bt.fontSize=18
-        bt.alignment=0
-    elif node == 'p-normal':
-        bt.fontSize=12
-        bt.alignment=0
-        bt.firstLineIndent = 32  #该属性支持第一行开头空格
-        bt.textColor = colors.black
-    elif node == 'p-error':
-        bt.fontSize=12
-        # bt.alignment=0
-        bt.firstLineIndent = 32  #该属性支持第一行开头空格
-        bt.textColor = colors.red
-
-    return bt
+        bt.alignment=1
+        title = Paragraph('审核详情', bt)
+        return title
+    @staticmethod
+    def setNormalText():
+        Style=getSampleStyleSheet()
+        ct = Style['Normal']     #字体的样式
+        ct.fontName='song'    #使用的字体
+        ct.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+        ct.leading = 30             #该属性是设置行距
+        ct.fontSize=12
+        ct.alignment=0
+        ct.firstLineIndent = 32  #该属性支持第一行开头空格
+        ct.textColor = colors.black
+        return ct
+    @staticmethod
+    def setErrorText():
+        Style=getSampleStyleSheet()
+        ct = Style['Normal']     #字体的样式
+        ct.fontName='song'    #使用的字体
+        ct.wordWrap = 'CJK'    #该属性支持自动换行，'CJK'是中文模式换行，用于英文中会截断单词造成阅读困难，可改为'Normal'
+        ct.leading = 30             #该属性是设置行距
+        ct.fontSize=12
+        ct.alignment=0
+        ct.firstLineIndent = 32  #该属性支持第一行开头空格
+        ct.textColor = colors.red
+        return ct
 
 # 定义全局变量
 reportSet = []  # 所有的错误信息，存放到此数组
@@ -53,20 +88,20 @@ text = '建议修改为：'
 # 导出PDF
 # report->保存验证信息的数组，total->总共验证的数据条数，errNum->错误数据
 def report(report, total, errNum):
-    _report = []
-    heading = '<p style="float: right;">毕业设计——列控工程数据验证</p>'
-    _report.append(Paragraph(heading, setStyle('heading')))
-    date=str(time.localtime().tm_year)+'年'+str(time.localtime().tm_mon)+'月'+str(time.localtime().tm_mday)+'日'+str(time.localtime().tm_hour)+'时'+str(time.localtime().tm_min)+'分'
-    version = '版本号:v-0.0.1       ' + date + '提交        作者：陈晨'
-    _report.append(Paragraph(version, setStyle('version')))
-    _report.append(Paragraph('审核详情', setStyle('title')))
+    _report = list()
+    _report.append(Graphs.setHead())
+    _report.append(Graphs.setVersion())
+    _report.append(Graphs.setTitle())
     line1 = '   共验证'+str(total)+'条数据，'+str(errNum)+'个数据异常'
-    _report.append(Paragraph(line1, setStyle('p-normal')))
+    _report.append(Paragraph(line1, Graphs.setNormalText()))
     for i in range(len(report)):
-        bt = setStyle(report[i][1])
-        _report.append(Paragraph(report[i][0],bt))
-    pdf=SimpleDocTemplate('verifyReport.pdf')
-    pdf.multiBuild(_report)
+        if(report[i][1] == 'p-normal'):
+            ct = Graphs.setNormalText()
+        else:
+            ct = Graphs.setErrorText()
+        _report.append(Paragraph(report[i][0],ct))
+    pdf=SimpleDocTemplate('verifyReport.pdf', pagesize=letter)
+    pdf.build(_report)
 
 
 # path 路径
@@ -142,23 +177,9 @@ def getUse():
 
 # 验证数据是否缺失
 def isMissing(use, location, reference, index):
-    reference = getLocNum(reference)
-    if(use == 'CZ-C01' and index == 0):
-        verifyLocation = reference + 30
-    elif(use == 'DW,ZX0/2/FZX2/0'):
-        verifyLocation = reference + 30
-    elif(use == 'JZ' and index == 0):
-        verifyLocation = reference - 40
-    elif(use == 'DW'):
-        verifyLocation = reference - 250
-    elif(index == 0):
-        verifyLocation = reference + 200
-    else:
-        verifyLocation = reference + 5
-    
-    distance = verifyLocation - getLocNum(location)
-    print(distance)
-    if(-30 < distance < 150):
+    mapDistance = getDistance(use, location, reference, index)
+    print(mapDistance['distance'])
+    if(-30 < mapDistance['distance'] < 150):
         print('数据未缺失')
         return False
     else:
@@ -166,53 +187,90 @@ def isMissing(use, location, reference, index):
         return True
 
 
+# 获取距离信息
+def getDistance(use, location, reference, index):
+    # 因为在验证执行应答器时使用了两个参照点，所以使用了一个数组来存放
+    location = getLocNum(location)
+    print(reference, location)
+    if(use == 'CZ-C01' and index == 0):
+        verifyLocation = reference[0] + 30
+    elif(use == 'DW,YG0/2' and index == 0):
+        verifyLocation = reference[0] - 223
+    elif(use == 'DW,ZX0/2/FZX2/0' and index == 0):
+        if(reference[0] + 450 >= reference[1]):
+            verifyLocation = reference[0] + 450 + 30
+        elif(reference[1] - 30 < reference[0] + 450 < reference[1]):
+            verifyLocation = reference[1] + 30
+        else:
+            verifyLocation = reference[1] - 30
+    elif(use == 'DW,FYG2/0' and index == 0):
+        verifyLocation = reference[0] + 223
+    elif(use == 'JZ' and index == 0):
+        verifyLocation = reference[0] - 40
+    elif(use == 'DW'):
+        verifyLocation = reference[0] - 250
+    elif(index == 0):
+        verifyLocation = reference[0] + 200
+    else:
+        verifyLocation = reference[0] + 5
+    
+    distance = verifyLocation - location
+    return {
+        "distance": distance,
+        "location": verifyLocation
+    }
+
+
 # 判断里程是否正确
-def verifyLocation(row, reference, B_Location, *args):
+def verifyLocation(row, reference, B_Location, use, index):
     strReport=''
     isTrueValue=True
-    if(args[0] == 'CZ-C01' and args[1] == 0):
-        spacing = 30
+    # args[0] == use,args[1] == index
+    if(use == 'CZ-C01' and index == 0):
         _strReport = ',【里程异常】->【该应答器应距离出站口30±0.5米】'
-    elif(args[0] == 'JZ' and args[1] == 0):
+    elif(use == 'JZ' and index == 0):
         _strReport = '，【里程异常】->【该应答器应距离进站信号机至少40±0.5米】'
-        spacing = -40
-    elif(args[0] == 'DW'):
+    elif(use == 'DW'):
         _strReport = '，【里程异常】->【该应答器应距离进站信号机至少250米】'
-        spacing = -250
-    elif(args[1] == 0):
+    elif(index == 0):
         _strReport = '，【里程异常】->【应答器组之间的距离应大于200米】'
-        spacing = 200
     else:
         _strReport = '，【里程异常】->【应答器间距应为5±0.5米】'
-        spacing = 5
 
-    sg_location = getLocNum(reference)
-    ponder_location = getLocNum(B_Location)  # 应答器位置
-    true_location = sg_location+spacing
-    if (true_location > ponder_location):
-        B_trueLocation = 'JHK'+str(true_location)[0:3]+'+'+str(true_location)[3:6]
-        suggest = text + B_trueLocation
-        print('里程错误！正确的里程为:'+B_trueLocation)
-        verify(row, 3, B_Location, suggest)
+    mapDistance = getDistance(use, B_Location, reference, index)
+    if(-0.5 < mapDistance['distance'] < 0.5):
+        print('里程正确！')
+    else:
+        strLoction = 'JHK' + str(mapDistance['location'])[0:3] + '+' + str(mapDistance['location'])[3:6]
+        suggest = text + strLoction
+        print('里程错误！正确的里程为:'+strLoction)
+        verify(row, 3, strLoction, suggest)
         isTrueValue = False
         strReport = _strReport
-        # print(B_Location)
-    else:
-        if(args[0] == 'DW，ZX0/2/FZX2/0'):
-            if(sg_location+450 < ponder_location):
-                print('里程错误！正确的里程为：' + str(sg_location+450))
-                suggest = text + str(sg_location+450)
-                verify(row, 3, B_Location, suggest)
-        elif(args[0] == 'DW'):
-            if(sg_location-250 < ponder_location):
-                print('里程错误！正确的里程为：' + str(sg_location-250))
-                suggest = text + str(sg_location-250)
-                verify(row, 3, B_Location, suggest)
-        else:
-            print('里程正确!')
-        B_trueLocation = B_Location
+    # if (true_location > ponder_location):
+    #     B_trueLocation = 'JHK'+str(true_location)[0:3]+'+'+str(true_location)[3:6]
+    #     suggest = text + B_trueLocation
+    #     print('里程错误！正确的里程为:'+B_trueLocation)
+    #     verify(row, 3, B_Location, suggest)
+    #     isTrueValue = False
+    #     strReport = _strReport
+    #     # print(B_Location)
+    # else:
+    #     if(args[0] == 'DW，ZX0/2/FZX2/0'):
+    #         if(sg_location+450 < ponder_location):
+    #             print('里程错误！正确的里程为：' + str(sg_location+450))
+    #             suggest = text + str(sg_location+450)
+    #             verify(row, 3, B_Location, suggest)
+    #     elif(args[0] == 'DW'):
+    #         if(sg_location-250 < ponder_location):
+    #             print('里程错误！正确的里程为：' + str(sg_location-250))
+    #             suggest = text + str(sg_location-250)
+    #             verify(row, 3, B_Location, suggest)
+    #     else:
+    #         print('里程正确!')
+    #     B_trueLocation = B_Location
     return {
-        "location":B_trueLocation,
+        "location":mapDistance['location'],
         "report":strReport,
         "isTrue": isTrueValue
         }
@@ -232,7 +290,7 @@ def verifyName(row, B_trueLocation, B_Name, use, index):
         flag = False
         reason =reason + '名称应以B字母开头；'
         print('首字母错误')
-    distance = int(str(getLocNum(B_trueLocation))[0:4])
+    distance = int(str(B_trueLocation)[0:4])
     if (distance % 2 == 0):
         trueDistance = distance + 1     # 得到正确的公里标
     else:
@@ -287,10 +345,9 @@ def verifyNum(row, B_Num, location, use, index):
     if(use != 'DW'):
         num_Num = value[4]     # 应答器组内编号
 
-    locaNum = getLocNum(location)
     T_locaNum = getLocNum(S_Through)
 
-    if(locaNum < T_locaNum):
+    if(location < T_locaNum):
         Sta_CZ = Sta_CZ1
     else:
         Sta_CZ = Sta_CZ2
@@ -402,15 +459,83 @@ def verify(row, col, value, suggest):
     worksheet.col(col+7).width = 256 * 25
 
 
+def verifyData(ponders, index, reference, P_use, flag, errNum):
+    strReport = ''
+    _reference = 0
+    for i in range(len(ponders)):
+        Pnum = ponders[i][2]    # 待验证的应答器编号
+        Plocation = ponders[i][3]   # 待验证的应答器里程
+        Pname = ponders[i][1]   # 待验证的应答器名称
+        Ptype = ponders[i][4]   # 待验证的应答器类型
+        Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
+
+        referenceSet = []
+        referenceSet.append(reference)
+        print(P_use[flag])
+        if(P_use[flag] == 'DW,ZX0/2/FZX2/0'):
+            referenceSet.append(getLocNum(S_Through))
+            print(referenceSet)
+        elif(P_use[flag] == 'JZ' and i == 0 or P_use[flag] == 'DW'):
+            referenceSet = []
+            referenceSet.append(getLocNum(S_In))
+
+        # 判断数据是否缺失，如果缺失，则执行下一个应答器
+        if(isMissing(P_use[flag], Plocation, referenceSet, i)):
+            strReport='     第' + str(index-1) + '行: '+Pname+'数据缺失！'
+            reportSet.append([strReport,'p-error'])
+            errNum += 1
+            index += 1
+            continue
+        # 验证里程并得到正确的里程
+        mapLocation = verifyLocation(
+            index, referenceSet, Plocation, P_use[flag], i)
+        trueLocation = mapLocation['location']
+        if(i == 0):
+            # 将第一个应答器的正确位置作为应答器组的位置
+            _reference = trueLocation
+        # 验证名称
+        mapName=verifyName(index, trueLocation, Pname, P_use[flag], i)
+        # 验证编号
+        mapNum=verifyNum(index, Pnum, trueLocation, P_use[flag], i)
+        # 验证类型
+        mapType=verifyType(index, P_use[flag], Ptype, i)
+        # 验证用途(可省略)
+        mapUse=verifyUse(index, Puse, P_use[flag])
+        # 获取所有方法执行后的report和数据是否正确
+        locationReport = mapLocation['report']
+        nameReport = mapName['report']
+        numReport = mapNum['report']
+        typeReport = mapType['report']
+        useReport = mapUse['report']
+        locatioIsTrue = mapLocation['isTrue']
+        nameIsTrue = mapName['isTrue']
+        numIsTrue = mapNum['isTrue']
+        typeIsTrue = mapType['isTrue']
+        useIsTrue = mapUse['isTrue']
+        if (locatioIsTrue and nameIsTrue and numIsTrue and typeIsTrue and useIsTrue) :
+            strReport = '     第'+str(index-1)+'行： '+Pname+'，验证正确。'
+            reportSet.append([strReport,'p-normal'])
+        else:
+            strReport = '     第'+str(index-1)+'行： '+Pname+locationReport+nameReport+numReport+typeReport+useReport
+            reportSet.append([strReport,'p-error'])
+            errNum += 1
+        reference = trueLocation
+        index += 1
+
+    return {
+        "reference": _reference,
+        "index": index,
+        "errNum": errNum
+    }
+
 # 开始验证
 def main():
-    global strReport,isTrueValue
     # 定义其他要用到的变量
 
     # 定义一个计数器,因为在 excel 中是从第二行开始的，所以定义为2
     index = 2   # 数据表位置
     flag = 0    # 应答器标志
-    reference = S_Out
+    reference = getLocNum(S_Out)
     use = getUse()
     _reference = 0
     P_use = use[0]
@@ -421,73 +546,22 @@ def main():
         isTrueValue = True
         end = index + use[1][flag]
         ponders = ponderSet[index:end]
-        strReport = ''
+        if(P_use[flag] == 'DW,YG0/2'):  # 执行快照，将这个应答器信息保存下来
+            _flag = flag
+            _ponders = ponders
+            _index = index
+            index += 2
+            flag += 1
+            continue
+        verifyedData = verifyData(ponders, index, reference, P_use, flag, errNum)
 
-        if(P_use[flag] == 'DW，ZX0/2/FZX2/0'):
-            reference = S_Through
-        elif(P_use[flag] == 'JZ' or P_use[flag] == 'DW'):
-            reference = S_In
+        if(P_use[flag] == 'DW,ZX0/2/FZX2/0'):
+            verifyData(_ponders, _index, verifyedData['reference'], P_use, _flag, verifyedData['errNum'])
 
-        for i in range(len(ponders)):
-            Pname = ponders[i][1]   # 待验证的应答器名称
-            Pnum = ponders[i][2]    # 待验证的应答器编号
-            Plocation = ponders[i][3]   # 待验证的应答器里程
-            Ptype = ponders[i][4]   # 待验证的应答器类型
-            Puse = ponders[i][5]    # 待验证的应答器用途(可省略)
-
-            # 判断数据是否缺失，如果缺失，则执行下一个应答器
-            if(isMissing(P_use[flag], Plocation, reference, i)):
-                strReport='     第' + str(index-1) + '行: '+Pname+'数据缺失！'
-                reportSet.append([strReport,'p-error'])
-                errNum +=1
-                index += 1
-                continue
-
-            # 验证里程并得到正确的里程
-            mapLocation = verifyLocation(
-                index, reference, Plocation, *[P_use[flag], i])
-            trueLocation = mapLocation['location']
-            if(i == 0):
-                # 将第一个应答器的正确位置作为应答器组的位置
-                _reference = trueLocation
-
-            # 验证名称
-            mapName=verifyName(index, trueLocation, Pname, P_use[flag], i)
-
-            # 验证编号
-            mapNum=verifyNum(index, Pnum, trueLocation, P_use[flag], i)  # 暂时不验证
-
-            # 验证类型
-            mapType=verifyType(index, P_use[flag], Ptype, i)
-
-            # 验证用途(可省略)
-            mapUse=verifyUse(index, Puse, P_use[flag])
-
-            # 获取所有方法执行后的report和数据是否正确
-            locationReport = mapLocation['report']
-            nameReport = mapName['report']
-            numReport = mapNum['report']
-            typeReport = mapType['report']
-            useReport = mapUse['report']
-            locatioIsTrue = mapLocation['isTrue']
-            nameIsTrue = mapName['isTrue']
-            numIsTrue = mapNum['isTrue']
-            typeIsTrue = mapType['isTrue']
-            useIsTrue = mapUse['isTrue']
-
-
-            if (locatioIsTrue and nameIsTrue and numIsTrue and typeIsTrue and useIsTrue) :
-                strReport = '     第'+str(index-1)+'行： '+Pname+'，验证正确。'
-                reportSet.append([strReport,'p-normal'])
-            else:
-                strReport = '     第'+str(index-1)+'行： '+Pname+locationReport+nameReport+numReport+typeReport+useReport
-                reportSet.append([strReport,'p-error'])
-                errNum += 1
-
-            reference = trueLocation
-            index += 1
         flag += 1
-        reference = _reference
+        reference = verifyedData["reference"]
+        index = verifyedData["index"]
+        errNum = verifyedData["errNum"]
 
     # 保存excel文件
     workbook.save('verified.xls')
