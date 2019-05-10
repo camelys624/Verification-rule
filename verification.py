@@ -179,7 +179,7 @@ def getUse():
 def isMissing(use, location, reference, index):
     mapDistance = getDistance(use, location, reference, index)
     print(mapDistance['distance'])
-    if(-30 < mapDistance['distance'] < 150):
+    if(-50 < mapDistance['distance'] < 150):
         print('数据未缺失')
         return False
     else:
@@ -197,9 +197,9 @@ def getDistance(use, location, reference, index):
     elif(use == 'DW,YG0/2' and index == 0):
         verifyLocation = reference[0] - 223
     elif(use == 'DW,ZX0/2/FZX2/0' and index == 0):
-        if(reference[0] + 450 >= reference[1]):
-            verifyLocation = reference[0] + 450 + 30
-        elif(reference[1] - 30 < reference[0] + 450 < reference[1]):
+        if(reference[0] + 450 >= reference[1] + 30):
+            verifyLocation = reference[0] + 450
+        elif(reference[1] - 30 < reference[0] + 450 < reference[1] + 30):
             verifyLocation = reference[1] + 30
         else:
             verifyLocation = reference[1] - 30
@@ -232,6 +232,10 @@ def verifyLocation(row, reference, B_Location, use, index):
         _strReport = '，【里程异常】->【该应答器应距离进站信号机至少40±0.5米】'
     elif(use == 'DW'):
         _strReport = '，【里程异常】->【该应答器应距离进站信号机至少250米】'
+    elif(use == 'DW,YG0/2' or use == 'DW,FYG2/0' and index == 0):
+         _strReport = '，【里程异常】->【该应答器应距离执行应答器组至少223米】'
+    elif(use == 'DW,ZX0/2/FZX2/0' and index == 0):
+        _strReport = '，【里程异常】->【该应答器应距离进站信号机至少30米而且需要距离CZ-C02应答器组至少450米】'
     elif(index == 0):
         _strReport = '，【里程异常】->【应答器组之间的距离应大于200米】'
     else:
